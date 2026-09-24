@@ -19,12 +19,17 @@ Backend (FastAPI + SQLAlchemy + Alembic) and frontend (React + Vite) skeletons; 
 
 ## Phase 1 — Auth
 
-`User` model, sign-up, login/logout, session cookie (see `security.md` > Authentication).
+`User` model, sign-up with required email verification (`EmailVerificationToken`, sent via
+Resend), login/logout, server-side session (`Session` entity, sliding 7-day cookie), and a
+5-attempt/15-minute account lockout (see `security.md` > Authentication).
 
-- **Automated tests:** sign-up creates a user with a hashed password; login succeeds with correct
-  credentials and fails with wrong ones; a session persists across requests; `LoginAttempt` rows
-  are created for both outcomes.
-- **End-to-end check:** sign up a new account in the browser, log out, log back in.
+- **Automated tests:** sign-up creates an unverified user with a hashed password; login is
+  rejected before verification and with wrong credentials (`LoginAttempt` rows created for both);
+  5 wrong passwords lock the account; verifying then logging in succeeds and sets a session
+  cookie that persists across requests; logout invalidates it.
+- **End-to-end check:** sign up a new account in the browser, open the verification email/link,
+  log in, confirm the account page shows your info, log out, confirm a protected page redirects
+  to login.
 
 ## Phase 2 — Public catalog (read-only)
 

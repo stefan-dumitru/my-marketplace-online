@@ -5,3 +5,7 @@ alembic
 psycopg[binary]
 pydantic-settings
 python-dotenv
+passlib[bcrypt]
+bcrypt<4.1  # passlib 1.7.4 (unmaintained) breaks on bcrypt>=4.1's removed __about__ attribute
+resend
+email-validator

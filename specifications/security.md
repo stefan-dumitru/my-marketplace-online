@@ -16,10 +16,16 @@ requirements specific to *this app* — its data sensitivity, its auth model, it
 
 ## Authentication
 
-- Method: email/password, in-app sign-up (no magic link, no OAuth provider).
-- Session handling: server-side session, httpOnly cookie. Exact expiry/refresh policy:
-  **[TODO]** — not decided; pick something reasonable (e.g. a sliding expiry) during the auth
-  feature's Plan Mode.
+- Method: email/password, in-app sign-up (no magic link, no OAuth provider). A new account must
+  verify its email (one-time token, `EmailVerificationToken`) before it can log in — see
+  `functional.md` > Authentication and `data-model.md` > `EmailVerificationToken`.
+- Session handling: server-side session (`Session` entity), `httpOnly` cookie holding the session
+  token. Sliding expiry — 7 days from last use, refreshed on every authenticated request; cookie
+  is cleared and the `Session` row deleted on logout.
+- Account lockout: 5 consecutive failed login attempts locks the account for 15 minutes
+  (`User.failed_login_attempts` / `locked_until`); the counter resets on a successful login.
+  Lockout responses are generic (no confirmation of whether the account exists or which field was
+  wrong) to avoid leaking account existence.
 - MFA required: none for v1.
 - External identity provider: N/A — this app has no external identity source.
 

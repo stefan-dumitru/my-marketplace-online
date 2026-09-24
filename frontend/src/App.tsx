@@ -1,27 +1,21 @@
-import { useEffect, useState } from 'react'
-import { getHealth, type HealthStatus } from './api/client'
+import { BrowserRouter, Route, Routes } from 'react-router'
+import AccountPage from './pages/AccountPage'
+import HomePage from './pages/HomePage'
+import LoginPage from './pages/LoginPage'
+import SignupPage from './pages/SignupPage'
+import VerifyEmailPage from './pages/VerifyEmailPage'
 
 function App() {
-  const [health, setHealth] = useState<HealthStatus | null>(null)
-  const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    getHealth()
-      .then(setHealth)
-      .catch(() => setError('Could not reach the backend'))
-  }, [])
-
   return (
-    <main>
-      <h1>Marketplace</h1>
-      {error && <p role="alert">{error}</p>}
-      {!error && !health && <p>Checking backend status...</p>}
-      {health && (
-        <p>
-          Backend status: <strong>{health.status}</strong> · Database: <strong>{health.db}</strong>
-        </p>
-      )}
-    </main>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/signup" element={<SignupPage />} />
+        <Route path="/verify-email" element={<VerifyEmailPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/account" element={<AccountPage />} />
+      </Routes>
+    </BrowserRouter>
   )
 }
 

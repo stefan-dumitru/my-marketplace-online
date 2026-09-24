@@ -60,10 +60,13 @@ this stack. Revisit if email volume or reliability ever makes synchronous sendin
   image upload fails with a clear error asking the seller to retry *(assumed default)* — the
   image is part of the create action, so a partial success (product without its image) isn't
   created silently.
-- **Email provider:** **[TODO]** — not yet chosen (see `functional.md` > Notifications; this is a
-  new dependency to confirm before adding, per `CLAUDE.md`). If sending fails, it's logged but
-  never blocks the underlying action (an order still succeeds even if its confirmation email
-  doesn't send) — this part is decided regardless of which provider is picked.
+- **Email provider:** **Resend**. For the notification emails in `functional.md` > Notifications
+  (order placed, status changes, seller decisions), sending failures are logged but never block
+  the underlying action — an order still succeeds even if its email doesn't send. The signup
+  verification email is the one exception: since email verification currently has no "resend"
+  path (see `data-model.md` > `EmailVerificationToken`), a failed send there fails the signup
+  itself (the created account is rolled back) rather than leaving the user with an unusable,
+  unverifiable account. Revisit once a resend-verification endpoint exists.
 - Timeout/retry policy per integration: **[TODO]** — not decided; needs a bounded timeout at
   minimum per `CLAUDE.md`'s general expectations, exact numbers TBD.
 - Circuit breaker / graceful degradation: **[TODO]** — not decided; likely unnecessary at this

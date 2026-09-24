@@ -5,7 +5,7 @@
 - **Master data:** `User`, `SellerProfile`, `Address`, `Category`, `Product`, `ProductImage`.
 - **Transactional data:** `CartItem` (current-state, not append-only, but not master data
   either), `Order`, `OrderLine`, `OrderStatusHistory`, `Review`, `SellerActionLog`,
-  `ProductModerationLog`, `LoginAttempt`.
+  `ProductModerationLog`, `LoginAttempt`, `Session`, `EmailVerificationToken`.
 
 ## Entities
 
@@ -15,10 +15,13 @@
   granted via an attached `SellerProfile`, not a separate account type. Admin is a flag, not a
   role a user can request (see `functional.md` > Authentication).
 - **Key fields:** `id`, `email` (unique), `password_hash`, `full_name`, `is_admin` (bool),
-  `is_active` (bool — false once the account is deactivated/deleted), `created_at`,
-  `anonymized_at` (nullable — set when the account is deleted, see Data Retention below).
+  `is_active` (bool — false once the account is deactivated/deleted), `email_verified` (bool,
+  default false — see Phase 1's login-gating rule in `functional.md` > Authentication),
+  `failed_login_attempts` (int, default 0), `locked_until` (timestamp, nullable — see
+  `security.md` > Authentication for the lockout policy), `created_at`, `anonymized_at`
+  (nullable — set when the account is deleted, see Data Retention below).
 - **Relationships:** has one optional `SellerProfile`; has many `Address`, `CartItem`, `Order`
-  (as buyer), `Review`.
+  (as buyer), `Review`, `Session`, `EmailVerificationToken`.
 - **Lifecycle:** created via sign-up. Profile fields are editable by the owner. Never hard-deleted
   (see Data Retention) — "deleting an account" anonymizes it instead.
 - **Delete/cascade semantics:** account deletion is a soft/anonymize operation, not a row delete
@@ -184,9 +187,36 @@
 
 - **Purpose:** Record of login attempts, for spotting account-takeover attempts.
 - **Key fields:** `id`, `email_attempted`, `user_id` (FK, nullable if the email didn't match any
-  account), `success` (bool), `ip_address`, `attempted_at`.
+  account), `success` (bool — true whenever the credentials matched, even if the login was then
+  blocked for an unverified email; see `security.md` > Authentication), `ip_address`,
+  `attempted_at`.
 - **Relationships:** optionally references one `User`.
 - **Lifecycle:** append-only.
+
+### Session — Transactional
+
+- **Purpose:** A logged-in session, backing the `httpOnly` session cookie (server-side sessions,
+  per `security.md` > Authentication).
+- **Key fields:** `id`, `token` (unique, random — the cookie's value), `user_id` (FK),
+  `created_at`, `last_used_at`, `expires_at`.
+- **Relationships:** belongs to one `User`.
+- **Lifecycle:** created on login; `expires_at`/`last_used_at` refreshed on each authenticated
+  request (sliding expiry); deleted on logout or once expired.
+- **Delete/cascade semantics:** deleted along with its `User` if the account is ever hard-deleted
+  (accounts aren't hard-deleted in v1 — see Data Retention — so this is theoretical); otherwise
+  deletable independently (logout, expiry).
+
+### EmailVerificationToken — Transactional
+
+- **Purpose:** A one-time token emailed to a new signup to confirm they own the address, per
+  `functional.md` > Authentication's login-gating rule.
+- **Key fields:** `id`, `user_id` (FK), `token` (unique, random), `created_at`, `expires_at`,
+  `used_at` (nullable).
+- **Relationships:** belongs to one `User`.
+- **Lifecycle:** created at signup; consumed (sets `used_at`, and `User.email_verified = true`)
+  by the verify-email endpoint. A token that's expired or already used is rejected; the app does
+  not currently issue a replacement (no "resend verification email" flow yet — noted as a gap,
+  not a decision, since it wasn't asked about this phase).
 
 ---
 
@@ -210,7 +240,8 @@ Explicitly out of scope, not an oversight.
 ## Relationships Overview
 
 - `User` 1—0/1 `SellerProfile`
-- `User` 1—* `Address`, `CartItem`, `Order` (as buyer), `Review`
+- `User` 1—* `Address`, `CartItem`, `Order` (as buyer), `Review`, `Session`,
+  `EmailVerificationToken`
 - `SellerProfile` 1—* `Product`, `Order` (as seller), `SellerActionLog`
 - `Category` 1—* `Category` (self, tree) and 1—* `Product`
 - `Product` 1—* `ProductImage`, `OrderLine`, `Review`, `CartItem`; 1—* `ProductModerationLog`
