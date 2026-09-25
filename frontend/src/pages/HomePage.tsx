@@ -46,6 +46,9 @@ function App() {
   return (
     <main>
       <h1>Marketplace</h1>
+      <p>
+        <Link to="/catalog">Browse catalog</Link>
+      </p>
       <AuthStatus />
       {error && <p role="alert">{error}</p>}
       {!error && !health && <p>Checking backend status...</p>}

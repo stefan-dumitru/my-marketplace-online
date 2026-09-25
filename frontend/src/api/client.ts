@@ -74,3 +74,66 @@ export function logout(): Promise<{ message: string }> {
 export function getCurrentUser(): Promise<User> {
   return request('/auth/me')
 }
+
+export interface Category {
+  id: number
+  name: string
+  slug: string
+  parent_id: number | null
+  children: Category[]
+}
+
+export interface ProductListItem {
+  id: number
+  name: string
+  price: string
+  stock_quantity: number
+  category_id: number
+  category_name: string
+  seller_id: number
+  seller_business_name: string
+}
+
+export interface ProductDetail extends ProductListItem {
+  description: string
+  images: { id: number; storage_key: string; display_order: number }[]
+  created_at: string
+}
+
+export interface Page<T> {
+  items: T[]
+  total: number
+  page: number
+  page_size: number
+}
+
+export function getCategories(): Promise<Category[]> {
+  return request('/categories')
+}
+
+export interface ProductFilters {
+  q?: string
+  categoryId?: number
+  sellerId?: number
+  minPrice?: string
+  maxPrice?: string
+  page?: number
+  pageSize?: number
+}
+
+export function getProducts(filters: ProductFilters = {}): Promise<Page<ProductListItem>> {
+  const params = new URLSearchParams()
+  if (filters.q) params.set('q', filters.q)
+  if (filters.categoryId !== undefined) params.set('category_id', String(filters.categoryId))
+  if (filters.sellerId !== undefined) params.set('seller_id', String(filters.sellerId))
+  if (filters.minPrice) params.set('min_price', filters.minPrice)
+  if (filters.maxPrice) params.set('max_price', filters.maxPrice)
+  params.set('page', String(filters.page ?? 1))
+  params.set('page_size', String(filters.pageSize ?? 20))
+
+  return request(`/products?${params.toString()}`)
+}
+
+export function getProduct(id: number): Promise<ProductDetail> {
+  return request(`/products/${id}`)
+}

@@ -1,7 +1,9 @@
 import { BrowserRouter, Route, Routes } from 'react-router'
 import AccountPage from './pages/AccountPage'
+import CatalogPage from './pages/CatalogPage'
 import HomePage from './pages/HomePage'
 import LoginPage from './pages/LoginPage'
+import ProductDetailPage from './pages/ProductDetailPage'
 import SignupPage from './pages/SignupPage'
 import VerifyEmailPage from './pages/VerifyEmailPage'
 
@@ -10,6 +12,8 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<HomePage />} />
+        <Route path="/catalog" element={<CatalogPage />} />
+        <Route path="/products/:id" element={<ProductDetailPage />} />
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/verify-email" element={<VerifyEmailPage />} />
         <Route path="/login" element={<LoginPage />} />
