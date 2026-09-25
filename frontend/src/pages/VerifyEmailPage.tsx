@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import { verifyEmail, ApiError } from '../api/client'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 
 type Status = 'verifying' | 'success' | 'error'
 
@@ -27,15 +29,28 @@ function VerifyEmailPage() {
   const effectiveStatus: Status = token ? status : 'error'
 
   return (
-    <main>
-      <h1>Email verification</h1>
-      {effectiveStatus === 'verifying' && <p>Verifying...</p>}
-      {effectiveStatus === 'success' && (
-        <p>
-          Your email is verified. <Link to="/login">Log in</Link>
-        </p>
-      )}
-      {effectiveStatus === 'error' && <p role="alert">{error}</p>}
+    <main className="mx-auto w-full max-w-sm">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-2xl">Email verification</CardTitle>
+          {effectiveStatus === 'verifying' && <CardDescription>Verifying...</CardDescription>}
+          {effectiveStatus === 'success' && (
+            <CardDescription>
+              Your email is verified.{' '}
+              <Link to="/login" className="text-foreground underline underline-offset-4">
+                Log in
+              </Link>
+            </CardDescription>
+          )}
+        </CardHeader>
+        {effectiveStatus === 'error' && (
+          <CardContent>
+            <Alert variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          </CardContent>
+        )}
+      </Card>
     </main>
   )
 }

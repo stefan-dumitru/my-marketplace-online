@@ -1,6 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router'
 import { getCategories, getProducts, type Category, type ProductListItem } from '../api/client'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 
 const PAGE_SIZE = 20
 
@@ -10,6 +15,9 @@ function flattenCategories(categories: Category[], depth = 0): { id: number; lab
     ...flattenCategories(category.children, depth + 1),
   ])
 }
+
+const selectClassName =
+  'border-input flex h-9 w-full rounded-md border bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]'
 
 function CatalogPage() {
   const [categories, setCategories] = useState<Category[]>([])
@@ -63,65 +71,94 @@ function CatalogPage() {
   const flatCategories = flattenCategories(categories)
 
   return (
-    <main>
-      <h1>Catalog</h1>
-      <div>
-        <label htmlFor="search">Search</label>
-        <input
-          id="search"
-          value={searchInput}
-          onChange={(e) => setSearchInput(e.target.value)}
-          placeholder="Product name or description"
-        />
-      </div>
-      <div>
-        <label htmlFor="category">Category</label>
-        <select
-          id="category"
-          value={categoryId}
-          onChange={(e) => setCategoryId(e.target.value ? Number(e.target.value) : '')}
-        >
-          <option value="">All categories</option>
-          {flatCategories.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.label}
-            </option>
-          ))}
-        </select>
-      </div>
-      <div>
-        <label htmlFor="minPrice">Min price</label>
-        <input id="minPrice" value={minPrice} onChange={(e) => setMinPrice(e.target.value)} />
-        <label htmlFor="maxPrice">Max price</label>
-        <input id="maxPrice" value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} />
+    <main className="flex flex-col gap-6">
+      <h1 className="text-3xl font-semibold tracking-tight">Catalog</h1>
+
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <div className="col-span-2 flex flex-col gap-2 sm:col-span-1">
+          <Label htmlFor="search">Search</Label>
+          <Input
+            id="search"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            placeholder="Product name or description"
+          />
+        </div>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="category">Category</Label>
+          <select
+            id="category"
+            className={selectClassName}
+            value={categoryId}
+            onChange={(e) => setCategoryId(e.target.value ? Number(e.target.value) : '')}
+          >
+            <option value="">All categories</option>
+            {flatCategories.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.label}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="minPrice">Min price</Label>
+          <Input id="minPrice" value={minPrice} onChange={(e) => setMinPrice(e.target.value)} />
+        </div>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="maxPrice">Max price</Label>
+          <Input id="maxPrice" value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} />
+        </div>
       </div>
 
-      {error && <p role="alert">{error}</p>}
-      {!error && !result && <p>Loading...</p>}
-      {!error && result && result.items.length === 0 && <p>No products match your filters.</p>}
+      {error && (
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+      {!error && !result && <p className="text-muted-foreground">Loading...</p>}
+      {!error && result && result.items.length === 0 && (
+        <p className="text-muted-foreground">No products match your filters.</p>
+      )}
       {!error && result && result.items.length > 0 && (
-        <ul>
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {result.items.map((product) => (
-            <li key={product.id}>
-              <Link to={`/products/${product.id}`}>{product.name}</Link> — {product.price} lei ·{' '}
-              {product.category_name} · {product.seller_business_name}
-            </li>
+            <Link key={product.id} to={`/products/${product.id}`}>
+              <Card className="h-full transition-shadow hover:shadow-md">
+                <CardHeader>
+                  <CardTitle className="line-clamp-2 text-base">{product.name}</CardTitle>
+                </CardHeader>
+                <CardContent className="flex flex-col gap-1">
+                  <p className="text-lg font-semibold">{product.price} lei</p>
+                  <p className="text-muted-foreground text-xs">{product.category_name}</p>
+                  <p className="text-muted-foreground text-xs">{product.seller_business_name}</p>
+                </CardContent>
+              </Card>
+            </Link>
           ))}
-        </ul>
+        </div>
       )}
 
       {result && result.total > 0 && (
-        <div>
-          <button type="button" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
+        <div className="flex items-center justify-center gap-4">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={page <= 1}
+            onClick={() => setPage((p) => p - 1)}
+          >
             Previous
-          </button>
-          <span>
-            {' '}
-            Page {page} of {totalPages}{' '}
+          </Button>
+          <span className="text-muted-foreground text-sm">
+            Page {page} of {totalPages}
           </span>
-          <button type="button" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)}>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={page >= totalPages}
+            onClick={() => setPage((p) => p + 1)}
+          >
             Next
-          </button>
+          </Button>
         </div>
       )}
     </main>

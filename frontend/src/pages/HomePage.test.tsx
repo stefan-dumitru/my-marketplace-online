@@ -11,7 +11,6 @@ describe('HomePage', () => {
 
   it('renders the backend health status once loaded', async () => {
     vi.spyOn(client, 'getHealth').mockResolvedValue({ status: 'ok', db: 'ok' })
-    vi.spyOn(client, 'getCurrentUser').mockRejectedValue(new client.ApiError(401, 'not logged in'))
 
     render(
       <MemoryRouter>
@@ -27,7 +26,6 @@ describe('HomePage', () => {
 
   it('shows an error message when the backend is unreachable', async () => {
     vi.spyOn(client, 'getHealth').mockRejectedValue(new Error('network error'))
-    vi.spyOn(client, 'getCurrentUser').mockRejectedValue(new client.ApiError(401, 'not logged in'))
 
     render(
       <MemoryRouter>
@@ -40,9 +38,8 @@ describe('HomePage', () => {
     })
   })
 
-  it('shows login/signup links when logged out', async () => {
+  it('links to the catalog', async () => {
     vi.spyOn(client, 'getHealth').mockResolvedValue({ status: 'ok', db: 'ok' })
-    vi.spyOn(client, 'getCurrentUser').mockRejectedValue(new client.ApiError(401, 'not logged in'))
 
     render(
       <MemoryRouter>
@@ -50,47 +47,9 @@ describe('HomePage', () => {
       </MemoryRouter>,
     )
 
-    expect(await screen.findByText('Log in')).toBeInTheDocument()
-    expect(screen.getByText('Sign up')).toBeInTheDocument()
-  })
-
-  it('shows the logged-in email and a logout option when authenticated', async () => {
-    vi.spyOn(client, 'getHealth').mockResolvedValue({ status: 'ok', db: 'ok' })
-    vi.spyOn(client, 'getCurrentUser').mockResolvedValue({
-      id: 1,
-      email: 'buyer@example.com',
-      full_name: 'Test Buyer',
-      is_admin: false,
-    })
-    vi.spyOn(client, 'getMyApplication').mockRejectedValue(
-      new client.ApiError(404, 'No application found'),
+    expect(await screen.findByRole('link', { name: /browse the catalog/i })).toHaveAttribute(
+      'href',
+      '/catalog',
     )
-
-    render(
-      <MemoryRouter>
-        <HomePage />
-      </MemoryRouter>,
-    )
-
-    expect(await screen.findByText(/Logged in as buyer@example.com/)).toBeInTheDocument()
-    expect(await screen.findByText('Become a seller')).toBeInTheDocument()
-  })
-
-  it('shows a seller applications link for admins', async () => {
-    vi.spyOn(client, 'getHealth').mockResolvedValue({ status: 'ok', db: 'ok' })
-    vi.spyOn(client, 'getCurrentUser').mockResolvedValue({
-      id: 1,
-      email: 'admin@example.com',
-      full_name: 'Admin',
-      is_admin: true,
-    })
-
-    render(
-      <MemoryRouter>
-        <HomePage />
-      </MemoryRouter>,
-    )
-
-    expect(await screen.findByText('Seller applications')).toBeInTheDocument()
   })
 })

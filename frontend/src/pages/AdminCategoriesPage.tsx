@@ -8,7 +8,6 @@ import {
   ApiError,
   type Category,
 } from '../api/client'
-import AdminNav from './AdminNav'
 
 type AccessStatus = 'checking' | 'allowed' | 'denied'
 
@@ -74,7 +73,6 @@ function AdminCategoriesPage() {
   return (
     <main>
       <h1>Categories</h1>
-      <AdminNav />
 
       <h2>Add a category</h2>
       <form onSubmit={handleCreate}>

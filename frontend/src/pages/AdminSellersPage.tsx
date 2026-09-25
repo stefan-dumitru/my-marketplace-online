@@ -8,7 +8,6 @@ import {
   suspendSeller,
   type SellerApplication,
 } from '../api/client'
-import AdminNav from './AdminNav'
 
 type AccessStatus = 'checking' | 'allowed' | 'denied'
 
@@ -61,7 +60,6 @@ function AdminSellersPage() {
   return (
     <main>
       <h1>Sellers</h1>
-      <AdminNav />
       {error && <p role="alert">{error}</p>}
       {sellers.length === 0 && <p>No sellers yet.</p>}
       <ul>

@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { getAdminStats, getCurrentUser, type AdminStats } from '../api/client'
-import AdminNav from './AdminNav'
 
 type AccessStatus = 'checking' | 'allowed' | 'denied'
 
@@ -25,7 +24,6 @@ function AdminStatsPage() {
   return (
     <main>
       <h1>Platform stats</h1>
-      <AdminNav />
       <p>Total sellers: {stats.total_sellers}</p>
       <ul>
         {Object.entries(stats.sellers_by_status).map(([status, count]) => (

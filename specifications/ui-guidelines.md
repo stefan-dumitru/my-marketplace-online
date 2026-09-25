@@ -2,20 +2,25 @@
 
 ## Design System
 
-- Component library / design system: no third-party UI kit *(assumed default — adjust if
-  needed)*. Plain CSS Modules with a small hand-built shared component set (buttons, inputs,
-  cards, modal, toast) co-located under `frontend/src/components/`. Chosen over pulling in
-  Tailwind/MUI because it's a new dependency either way and this keeps the styling layer simple
-  and easy to read for a beginner-to-intermediate build; revisit if the component count grows
-  large enough that hand-rolling everything gets tedious.
-- Brand colors / typography: [TODO — not decided yet; not a blocker, pick a simple palette/font
-  when building the first screen].
+- Component library / design system: **Tailwind CSS v4 + shadcn/ui** (revised from the earlier
+  "no third-party UI kit" decision, once the plain-CSS scaffold needed a real visual pass).
+  shadcn/ui components are copied into the repo under `frontend/src/components/ui/` as editable
+  source (Radix UI primitives underneath), not pulled in as an opaque dependency — this keeps the
+  original goal of beginner-readable styling code intact while getting a more polished look than
+  hand-rolled CSS gave in reasonable time. Shared, non-shadcn layout pieces (e.g. the site header/
+  nav) live under `frontend/src/components/layout/`.
+- Brand colors / typography: shadcn's default neutral palette (light + dark CSS variables in
+  `frontend/src/index.css`), system font stack. No custom brand palette chosen yet — revisit if/
+  when one is wanted.
 - Light/dark mode: both supported.
 - Responsive targets: desktop-first, mobile best-effort — mobile must not be broken, but layout
   decisions optimize for desktop/laptop browsing first.
 - Exact breakpoints *(assumed default — adjust if needed)*: single breakpoint at `768px`. Below
   it, navigation collapses behind a hamburger menu and multi-column layouts (catalog grid,
   dashboards) stack to one column. At/above it, full nav bar and multi-column grids.
+- `<select>` elements stay native HTML (styled with Tailwind classes), not swapped for shadcn's
+  Radix-based `Select` — several existing tests drive dropdowns via `user-event`'s
+  `selectOptions()`, which only works on real `<select>` elements.
 - Component structure convention: components co-located with the page/feature that uses them
   (`pages/<page>/`), promoted to the shared `components/` folder only once reused by a second
   page.

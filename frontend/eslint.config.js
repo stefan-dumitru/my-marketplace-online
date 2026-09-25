@@ -22,4 +22,13 @@ export default defineConfig([
       globals: globals.browser,
     },
   },
+  {
+    // shadcn/ui components intentionally export a cva() variants function
+    // alongside the component (e.g. `buttonVariants`) — this base UI layer
+    // isn't hot-reload-sensitive enough to warrant splitting that out.
+    files: ['src/components/ui/**/*.tsx'],
+    rules: {
+      'react-refresh/only-export-components': 'off',
+    },
+  },
 ])

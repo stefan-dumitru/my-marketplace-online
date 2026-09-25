@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { getAdminProducts, getCurrentUser, moderateProduct, type AdminProduct } from '../api/client'
-import AdminNav from './AdminNav'
 
 type AccessStatus = 'checking' | 'allowed' | 'denied'
 
@@ -54,7 +53,6 @@ function AdminProductsPage() {
   return (
     <main>
       <h1>Products</h1>
-      <AdminNav />
 
       <label htmlFor="statusFilter">Filter by status</label>
       <select id="statusFilter" value={filter} onChange={(e) => setFilter(e.target.value)}>
