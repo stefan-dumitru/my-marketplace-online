@@ -14,6 +14,7 @@ from app.routers import (
     health,
     orders,
     products,
+    reviews,
     seller_orders,
     seller_products,
     sellers,
@@ -44,3 +45,4 @@ app.include_router(checkout.router)
 app.include_router(orders.router)
 app.include_router(seller_orders.router)
 app.include_router(admin_orders.router)
+app.include_router(reviews.router)

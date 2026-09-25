@@ -8,6 +8,7 @@ from app.models.order_line import OrderLine
 from app.models.order_status_history import OrderStatusHistory
 from app.models.product import Product
 from app.models.product_image import ProductImage
+from app.models.review import Review
 from app.models.seller_action_log import SellerActionLog
 from app.models.seller_profile import SellerProfile
 from app.models.session import Session
@@ -28,4 +29,5 @@ __all__ = [
     "Order",
     "OrderLine",
     "OrderStatusHistory",
+    "Review",
 ]

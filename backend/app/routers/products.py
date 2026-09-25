@@ -1,13 +1,14 @@
 from decimal import Decimal
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import or_
+from sqlalchemy import func, or_
 from sqlalchemy.orm import Session as DBSession
 
 from app.db import get_db
 from app.models.category import Category
 from app.models.product import Product
 from app.models.product_image import ProductImage
+from app.models.review import Review
 from app.schemas.catalog import Page, ProductDetailOut, ProductImageOut, ProductListItemOut
 from app.services.catalog import visible_products_query
 from app.services.storage import image_url
@@ -96,6 +97,12 @@ def get_product(product_id: int, db: DBSession = Depends(get_db)) -> ProductDeta
         .all()
     )
 
+    average_rating, review_count = (
+        db.query(func.avg(Review.rating), func.count(Review.id))
+        .filter(Review.product_id == product.id)
+        .one()
+    )
+
     return ProductDetailOut(
         id=product.id,
         name=product.name,
@@ -116,4 +123,6 @@ def get_product(product_id: int, db: DBSession = Depends(get_db)) -> ProductDeta
             for image in images
         ],
         created_at=product.created_at,
+        average_rating=float(average_rating) if average_rating is not None else None,
+        review_count=review_count,
     )

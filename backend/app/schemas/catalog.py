@@ -38,6 +38,8 @@ class ProductDetailOut(ProductListItemOut):
     description: str
     images: list[ProductImageOut]
     created_at: datetime
+    average_rating: float | None
+    review_count: int
 
 
 class Page[T](BaseModel):

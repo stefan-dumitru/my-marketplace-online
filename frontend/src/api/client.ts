@@ -106,6 +106,8 @@ export interface ProductDetail extends ProductListItem {
   description: string
   images: ProductImage[]
   created_at: string
+  average_rating: number | null
+  review_count: number
 }
 
 export interface Page<T> {
@@ -376,4 +378,41 @@ export function updateOrderStatus(
     method: 'PATCH',
     body: JSON.stringify({ status: newStatus, note: note ?? null }),
   })
+}
+
+export interface Review {
+  id: number
+  product_id: number
+  buyer_id: number
+  buyer_name: string
+  rating: number
+  comment: string
+  created_at: string
+  updated_at: string
+}
+
+export function getProductReviews(productId: number): Promise<Page<Review>> {
+  return request(`/products/${productId}/reviews`)
+}
+
+export function getMyReview(productId: number): Promise<Review> {
+  return request(`/products/${productId}/reviews/me`)
+}
+
+export function createReview(productId: number, rating: number, comment: string): Promise<Review> {
+  return request(`/products/${productId}/reviews`, {
+    method: 'POST',
+    body: JSON.stringify({ rating, comment }),
+  })
+}
+
+export function updateReview(productId: number, rating: number, comment: string): Promise<Review> {
+  return request(`/products/${productId}/reviews/me`, {
+    method: 'PATCH',
+    body: JSON.stringify({ rating, comment }),
+  })
+}
+
+export function deleteReview(productId: number): Promise<void> {
+  return request(`/products/${productId}/reviews/me`, { method: 'DELETE' })
 }
