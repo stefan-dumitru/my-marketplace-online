@@ -15,6 +15,7 @@ from app.models.product import ModerationStatus, Product
 from app.models.seller_profile import SellerProfile, SellerStatus
 from app.models.user import User
 from app.schemas.checkout import CheckoutRequest, CheckoutResponse, SkippedItem
+from app.services.email import send_order_placed_email
 
 router = APIRouter(tags=["checkout"])
 
@@ -145,5 +146,6 @@ def checkout(
 
         order_ids.append(order.id)
         db.commit()
+        send_order_placed_email(current_user.email, order)
 
     return CheckoutResponse(order_ids=order_ids, skipped=skipped)

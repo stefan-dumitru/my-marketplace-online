@@ -22,6 +22,9 @@ def test_non_admin_cannot_list_sellers(client: TestClient, db_session: DBSession
 def test_admin_can_approve_seller_and_logs_it(
     client: TestClient, db_session: DBSession, monkeypatch
 ):
+    monkeypatch.setattr(
+        "app.routers.admin_sellers.send_seller_decision_email", lambda *a, **k: None
+    )
     seller_id = _apply_as_seller(client, db_session, monkeypatch, "applicant@example.com")
     signup_verify_login(client, db_session, monkeypatch, "admin@example.com", is_admin=True)
 
@@ -41,6 +44,9 @@ def test_admin_can_approve_seller_and_logs_it(
 def test_admin_can_reject_seller_with_reason(
     client: TestClient, db_session: DBSession, monkeypatch
 ):
+    monkeypatch.setattr(
+        "app.routers.admin_sellers.send_seller_decision_email", lambda *a, **k: None
+    )
     seller_id = _apply_as_seller(client, db_session, monkeypatch, "applicant2@example.com")
     signup_verify_login(client, db_session, monkeypatch, "admin2@example.com", is_admin=True)
 

@@ -68,8 +68,8 @@ seller; atomic stock decrement; partial-success on a stock-out; snapshotting (se
 ## Phase 5 — Fulfillment, order history & notifications
 
 Seller order-status updates; buyer order history + dashboard summary; email notifications on
-placed/status-change/seller-decision (email provider choice still `[TODO]`, see
-`operations.md` > External Integrations).
+placed/status-change/seller-decision, sent via Resend (see `operations.md` > External
+Integrations).
 
 - **Automated tests:** valid/invalid status transitions enforced (`placed → shipped → delivered`,
   `→ cancelled`, terminal states reject further transitions); only the owning seller or an admin

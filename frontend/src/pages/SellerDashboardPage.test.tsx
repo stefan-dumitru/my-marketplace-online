@@ -1,6 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { MemoryRouter } from 'react-router'
 import SellerDashboardPage from './SellerDashboardPage'
 import * as client from '../api/client'
 
@@ -35,7 +36,11 @@ describe('SellerDashboardPage', () => {
       page_size: 20,
     })
 
-    render(<SellerDashboardPage />)
+    render(
+      <MemoryRouter>
+        <SellerDashboardPage />
+      </MemoryRouter>,
+    )
 
     expect(await screen.findByText(/Widget/)).toBeInTheDocument()
   })
@@ -62,7 +67,11 @@ describe('SellerDashboardPage', () => {
     })
     const user = userEvent.setup()
 
-    render(<SellerDashboardPage />)
+    render(
+      <MemoryRouter>
+        <SellerDashboardPage />
+      </MemoryRouter>,
+    )
 
     await user.type(await screen.findByLabelText('Name'), 'New Gadget')
     await user.type(screen.getByLabelText('Description'), 'Shiny')

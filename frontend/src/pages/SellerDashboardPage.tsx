@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { ChangeEvent, FormEvent } from 'react'
+import { Link } from 'react-router'
 import {
   createProduct,
   getCategories,
@@ -164,6 +165,9 @@ function SellerDashboardPage() {
   return (
     <main>
       <h1>Seller dashboard</h1>
+      <p>
+        <Link to="/sell/orders">View orders to fulfill</Link>
+      </p>
 
       <h2>Add a product</h2>
       <form onSubmit={handleCreate}>

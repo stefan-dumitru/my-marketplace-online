@@ -11,6 +11,7 @@ import OrderHistoryPage from './pages/OrderHistoryPage'
 import ProductDetailPage from './pages/ProductDetailPage'
 import SellerApplyPage from './pages/SellerApplyPage'
 import SellerDashboardPage from './pages/SellerDashboardPage'
+import SellerOrdersPage from './pages/SellerOrdersPage'
 import SignupPage from './pages/SignupPage'
 import VerifyEmailPage from './pages/VerifyEmailPage'
 
@@ -27,6 +28,7 @@ function App() {
         <Route path="/account" element={<AccountPage />} />
         <Route path="/sell/apply" element={<SellerApplyPage />} />
         <Route path="/sell" element={<SellerDashboardPage />} />
+        <Route path="/sell/orders" element={<SellerOrdersPage />} />
         <Route path="/admin/sellers" element={<AdminSellersPage />} />
         <Route path="/cart" element={<CartPage />} />
         <Route path="/checkout" element={<CheckoutPage />} />

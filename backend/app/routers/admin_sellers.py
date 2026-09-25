@@ -9,6 +9,7 @@ from app.models.seller_action_log import SellerAction, SellerActionLog
 from app.models.seller_profile import SellerProfile, SellerStatus
 from app.models.user import User
 from app.schemas.seller import SellerApplicationOut, SellerRejectRequest
+from app.services.email import send_seller_decision_email
 
 router = APIRouter(prefix="/admin/sellers", tags=["admin"])
 
@@ -50,6 +51,11 @@ def approve_seller(
     )
     db.commit()
     db.refresh(seller)
+
+    applicant = db.query(User).filter(User.id == seller.user_id).first()
+    if applicant is not None:
+        send_seller_decision_email(applicant.email, seller)
+
     return seller
 
 
@@ -75,4 +81,9 @@ def reject_seller(
     )
     db.commit()
     db.refresh(seller)
+
+    applicant = db.query(User).filter(User.id == seller.user_id).first()
+    if applicant is not None:
+        send_seller_decision_email(applicant.email, seller)
+
     return seller

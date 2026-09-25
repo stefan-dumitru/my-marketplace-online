@@ -3,14 +3,29 @@ from sqlalchemy.orm import Session as DBSession
 
 from app.db import get_db
 from app.deps import get_current_user
-from app.models.order import Order
+from app.models.order import Order, OrderStatus
 from app.models.order_line import OrderLine
 from app.models.seller_profile import SellerProfile
 from app.models.user import User
 from app.schemas.catalog import Page
-from app.schemas.order import OrderDetailOut, OrderLineOut, OrderListItemOut
+from app.schemas.order import OrderDetailOut, OrderLineOut, OrderListItemOut, OrderSummaryOut
 
 router = APIRouter(prefix="/orders", tags=["orders"])
+
+
+@router.get("/summary", response_model=OrderSummaryOut)
+def get_order_summary(
+    current_user: User = Depends(get_current_user), db: DBSession = Depends(get_db)
+) -> OrderSummaryOut:
+    in_progress_count = (
+        db.query(Order)
+        .filter(
+            Order.buyer_id == current_user.id,
+            Order.status.in_([OrderStatus.placed, OrderStatus.shipped]),
+        )
+        .count()
+    )
+    return OrderSummaryOut(in_progress_count=in_progress_count)
 
 
 @router.get("", response_model=Page[OrderListItemOut])

@@ -37,3 +37,12 @@ class OrderDetailOut(OrderListItemOut):
     ship_postal_code: str
     ship_country: str
     lines: list[OrderLineOut]
+
+
+class OrderStatusUpdateRequest(BaseModel):
+    status: OrderStatus
+    note: str | None = None
+
+
+class OrderSummaryOut(BaseModel):
+    in_progress_count: int

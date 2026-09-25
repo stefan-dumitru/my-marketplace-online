@@ -354,3 +354,26 @@ export function getOrders(): Promise<Page<OrderListItem>> {
 export function getOrder(id: number): Promise<OrderDetail> {
   return request(`/orders/${id}`)
 }
+
+export interface OrderSummary {
+  in_progress_count: number
+}
+
+export function getOrderSummary(): Promise<OrderSummary> {
+  return request('/orders/summary')
+}
+
+export function getMyOrders(): Promise<Page<OrderListItem>> {
+  return request('/sellers/me/orders')
+}
+
+export function updateOrderStatus(
+  orderId: number,
+  newStatus: OrderListItem['status'],
+  note?: string,
+): Promise<OrderListItem> {
+  return request(`/sellers/me/orders/${orderId}/status`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status: newStatus, note: note ?? null }),
+  })
+}

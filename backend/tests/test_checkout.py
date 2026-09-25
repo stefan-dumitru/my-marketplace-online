@@ -33,6 +33,7 @@ def _create_address(client: TestClient) -> int:
 def test_multi_seller_checkout_creates_one_order_per_seller(
     client: TestClient, db_session: DBSession, monkeypatch
 ):
+    monkeypatch.setattr("app.routers.checkout.send_order_placed_email", lambda *a, **k: None)
     seller_a = make_approved_seller(
         client, db_session, monkeypatch, "checkout-seller-a@example.com"
     )
@@ -94,6 +95,7 @@ def test_checkout_with_someone_elses_address_is_400(
 
 
 def test_stock_out_skips_only_that_line(client: TestClient, db_session: DBSession, monkeypatch):
+    monkeypatch.setattr("app.routers.checkout.send_order_placed_email", lambda *a, **k: None)
     seller_a = make_approved_seller(
         client, db_session, monkeypatch, "checkout-seller-d@example.com"
     )

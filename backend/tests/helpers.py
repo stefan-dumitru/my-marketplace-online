@@ -9,6 +9,16 @@ from app.models.user import User
 
 DEFAULT_PASSWORD = "correct horse battery staple"
 
+DEFAULT_ADDRESS_PAYLOAD = {
+    "label": "Home",
+    "recipient_name": "Test Buyer",
+    "street": "1 Main St",
+    "city": "Bucharest",
+    "region": "Bucharest",
+    "postal_code": "010101",
+    "country": "Romania",
+}
+
 
 def signup_verify_login(
     client: TestClient,
@@ -45,6 +55,12 @@ def signup_verify_login(
     assert login_response.status_code == 200, login_response.text
 
     return user
+
+
+def login(client: TestClient, email: str, password: str = DEFAULT_PASSWORD) -> None:
+    """Log `client` in as an already-existing, already-verified user."""
+    response = client.post("/auth/login", json={"email": email, "password": password})
+    assert response.status_code == 200, response.text
 
 
 def make_approved_seller(
@@ -91,3 +107,41 @@ def make_product(
     db_session.add(product)
     db_session.commit()
     return product
+
+
+def place_order(
+    client: TestClient,
+    db_session: DBSession,
+    monkeypatch,
+    *,
+    buyer_email: str,
+    seller_email: str,
+    stock_quantity: int = 5,
+    quantity: int = 1,
+    new_buyer: bool = True,
+) -> dict:
+    """Creates a seller + product, places one order as a buyer.
+
+    Leaves `client` logged in as the buyer — use `login()` to switch to the seller/admin
+    afterward. Mocks the order-placed email so this never hits Resend for real. Pass
+    `new_buyer=False` to place a second order as a buyer who already exists and is verified
+    (e.g. from an earlier `place_order` call) — this just logs them back in instead of
+    re-signing-up, which would 409 on an already-used email.
+    """
+    monkeypatch.setattr("app.routers.checkout.send_order_placed_email", lambda *a, **k: None)
+    seller = make_approved_seller(client, db_session, monkeypatch, seller_email)
+    category = make_category(db_session)
+    product = make_product(db_session, seller, category, stock_quantity=stock_quantity)
+
+    if new_buyer:
+        buyer = signup_verify_login(client, db_session, monkeypatch, buyer_email)
+    else:
+        login(client, buyer_email)
+        buyer = db_session.query(User).filter(User.email == buyer_email).one()
+
+    address_id = client.post("/addresses", json=DEFAULT_ADDRESS_PAYLOAD).json()["id"]
+    client.post("/cart/items", json={"product_id": product.id, "quantity": quantity})
+    response = client.post("/checkout", json={"address_id": address_id})
+    order_id = response.json()["order_ids"][0]
+
+    return {"order_id": order_id, "seller": seller, "product": product, "buyer": buyer}

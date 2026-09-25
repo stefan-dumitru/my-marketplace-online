@@ -27,12 +27,14 @@ describe('AccountPage', () => {
       full_name: 'Test Buyer',
       is_admin: false,
     })
+    vi.spyOn(client, 'getOrderSummary').mockResolvedValue({ in_progress_count: 3 })
 
     renderAccountPage()
 
     await waitFor(() => {
       expect(screen.getByText(/test buyer/i)).toBeInTheDocument()
     })
+    expect(await screen.findByText(/3 order\(s\) in progress/)).toBeInTheDocument()
   })
 
   it('redirects to login when not authenticated', async () => {
