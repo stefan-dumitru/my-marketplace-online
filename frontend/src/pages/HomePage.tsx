@@ -46,7 +46,8 @@ function AuthStatus() {
   if (user) {
     return (
       <p>
-        Logged in as {user.email} · <SellerLink isAdmin={user.is_admin} /> ·{' '}
+        Logged in as {user.email} · <Link to="/cart">Cart</Link> · <Link to="/orders">Orders</Link>{' '}
+        · <SellerLink isAdmin={user.is_admin} /> ·{' '}
         <button type="button" onClick={() => logout().then(() => setUser(null))}>
           Log out
         </button>

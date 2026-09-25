@@ -4,10 +4,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.logging_config import configure_logging
 from app.routers import (
+    addresses,
     admin_sellers,
     auth,
+    cart,
     categories,
+    checkout,
     health,
+    orders,
     products,
     seller_products,
     sellers,
@@ -32,3 +36,7 @@ app.include_router(products.router)
 app.include_router(sellers.router)
 app.include_router(admin_sellers.router)
 app.include_router(seller_products.router)
+app.include_router(addresses.router)
+app.include_router(cart.router)
+app.include_router(checkout.router)
+app.include_router(orders.router)

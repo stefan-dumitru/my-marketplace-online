@@ -232,3 +232,125 @@ export function uploadProductImage(productId: number, file: File): Promise<{ id:
     body: formData,
   })
 }
+
+export interface CartItem {
+  product_id: number
+  product_name: string
+  unit_price: string
+  quantity: number
+  line_total: string
+  seller_id: number
+  seller_business_name: string
+  available_stock: number
+}
+
+export interface Cart {
+  items: CartItem[]
+  total: string
+}
+
+export function getCart(): Promise<Cart> {
+  return request('/cart')
+}
+
+export function addToCart(productId: number, quantity = 1): Promise<Cart> {
+  return request('/cart/items', {
+    method: 'POST',
+    body: JSON.stringify({ product_id: productId, quantity }),
+  })
+}
+
+export function updateCartItem(productId: number, quantity: number): Promise<Cart> {
+  return request(`/cart/items/${productId}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ quantity }),
+  })
+}
+
+export function removeFromCart(productId: number): Promise<Cart> {
+  return request(`/cart/items/${productId}`, { method: 'DELETE' })
+}
+
+export interface AddressInput {
+  label: string
+  recipient_name: string
+  street: string
+  city: string
+  region: string
+  postal_code: string
+  country: string
+}
+
+export interface Address extends AddressInput {
+  id: number
+  is_default: boolean
+  created_at: string
+}
+
+export function getAddresses(): Promise<Address[]> {
+  return request('/addresses')
+}
+
+export function createAddress(input: AddressInput): Promise<Address> {
+  return request('/addresses', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
+}
+
+export interface SkippedItem {
+  product_id: number
+  product_name: string
+  reason: string
+}
+
+export interface CheckoutResult {
+  order_ids: number[]
+  skipped: SkippedItem[]
+}
+
+export function checkout(addressId: number): Promise<CheckoutResult> {
+  return request('/checkout', {
+    method: 'POST',
+    body: JSON.stringify({ address_id: addressId }),
+  })
+}
+
+export interface OrderListItem {
+  id: number
+  seller_id: number
+  seller_business_name: string
+  status: 'placed' | 'shipped' | 'delivered' | 'cancelled'
+  placed_at: string
+  total_amount: string
+}
+
+export interface OrderLine {
+  id: number
+  product_id: number
+  product_name_snapshot: string
+  unit_price_snapshot: string
+  quantity: number
+  line_total: string
+}
+
+export interface OrderDetail extends OrderListItem {
+  shipped_at: string | null
+  delivered_at: string | null
+  cancelled_at: string | null
+  ship_recipient_name: string
+  ship_street: string
+  ship_city: string
+  ship_region: string
+  ship_postal_code: string
+  ship_country: string
+  lines: OrderLine[]
+}
+
+export function getOrders(): Promise<Page<OrderListItem>> {
+  return request('/orders')
+}
+
+export function getOrder(id: number): Promise<OrderDetail> {
+  return request(`/orders/${id}`)
+}

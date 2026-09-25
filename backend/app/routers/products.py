@@ -1,33 +1,18 @@
 from decimal import Decimal
-from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import or_
-from sqlalchemy.orm import Query as SAQuery
 from sqlalchemy.orm import Session as DBSession
 
 from app.db import get_db
 from app.models.category import Category
-from app.models.product import ModerationStatus, Product
+from app.models.product import Product
 from app.models.product_image import ProductImage
-from app.models.seller_profile import SellerProfile, SellerStatus
 from app.schemas.catalog import Page, ProductDetailOut, ProductImageOut, ProductListItemOut
+from app.services.catalog import visible_products_query
 from app.services.storage import image_url
 
 router = APIRouter(tags=["catalog"])
-
-
-def _visible_products_query(db: DBSession) -> SAQuery[Any]:
-    return (
-        db.query(Product, Category.name, SellerProfile.business_name)
-        .join(Category, Product.category_id == Category.id)
-        .join(SellerProfile, Product.seller_id == SellerProfile.id)
-        .filter(
-            Product.is_active.is_(True),
-            Product.moderation_status == ModerationStatus.active,
-            SellerProfile.status == SellerStatus.approved,
-        )
-    )
 
 
 def _category_and_descendant_ids(db: DBSession, category_id: int) -> set[int]:
@@ -59,7 +44,7 @@ def list_products(
     page_size: int = Query(default=20, ge=1, le=100),
     db: DBSession = Depends(get_db),
 ) -> Page[ProductListItemOut]:
-    query = _visible_products_query(db)
+    query = visible_products_query(db)
 
     if q:
         like = f"%{q}%"
@@ -99,7 +84,7 @@ def list_products(
 
 @router.get("/products/{product_id}", response_model=ProductDetailOut)
 def get_product(product_id: int, db: DBSession = Depends(get_db)) -> ProductDetailOut:
-    row = _visible_products_query(db).filter(Product.id == product_id).first()
+    row = visible_products_query(db).filter(Product.id == product_id).first()
     if row is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
 

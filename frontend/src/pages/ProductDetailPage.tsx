@@ -1,13 +1,17 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, useParams } from 'react-router'
-import { getProduct, ApiError, type ProductDetail } from '../api/client'
+import { Link, useNavigate, useParams } from 'react-router'
+import { addToCart, getProduct, ApiError, type ProductDetail } from '../api/client'
 
 type Status = 'loading' | 'ready' | 'not-found' | 'error'
 
 function ProductDetailPage() {
   const { id } = useParams()
+  const navigate = useNavigate()
   const [product, setProduct] = useState<ProductDetail | null>(null)
   const [status, setStatus] = useState<Status>('loading')
+  const [quantity, setQuantity] = useState(1)
+  const [cartError, setCartError] = useState<string | null>(null)
+  const [added, setAdded] = useState(false)
   const hasRequested = useRef<string | undefined>(undefined)
 
   useEffect(() => {
@@ -22,6 +26,22 @@ function ProductDetailPage() {
         setStatus(err instanceof ApiError && err.status === 404 ? 'not-found' : 'error')
       })
   }, [id])
+
+  async function handleAddToCart() {
+    if (!product) return
+    setCartError(null)
+    setAdded(false)
+    try {
+      await addToCart(product.id, quantity)
+      setAdded(true)
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 401) {
+        void navigate('/login')
+        return
+      }
+      setCartError(err instanceof ApiError ? err.message : 'Could not add to cart')
+    }
+  }
 
   if (status === 'loading') return <p>Loading...</p>
   if (status === 'not-found') {
@@ -52,6 +72,27 @@ function ProductDetailPage() {
           ))}
         </div>
       )}
+      <div>
+        <label htmlFor="quantity">Quantity</label>
+        <input
+          id="quantity"
+          type="number"
+          min={1}
+          value={quantity}
+          onChange={(e) => setQuantity(Number(e.target.value))}
+          style={{ width: '4em' }}
+        />
+        <button type="button" onClick={handleAddToCart}>
+          Add to cart
+        </button>
+        {added && (
+          <span>
+            {' '}
+            Added to cart. <Link to="/cart">View cart</Link>
+          </span>
+        )}
+        {cartError && <span role="alert"> {cartError}</span>}
+      </div>
     </main>
   )
 }
