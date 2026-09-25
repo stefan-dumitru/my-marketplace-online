@@ -79,7 +79,6 @@ def test_admin_stats_aggregate_across_sellers(
     order2.status = OrderStatus.cancelled
     db_session.commit()
 
-
     signup_verify_login(client, db_session, monkeypatch, "stats-admin1@example.com", is_admin=True)
     response = client.get("/admin/stats")
 

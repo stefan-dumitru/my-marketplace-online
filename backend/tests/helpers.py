@@ -135,9 +135,7 @@ def place_order(
     else:
         seller_user = db_session.query(User).filter(User.email == seller_email).one()
         seller = (
-            db_session.query(SellerProfile)
-            .filter(SellerProfile.user_id == seller_user.id)
-            .one()
+            db_session.query(SellerProfile).filter(SellerProfile.user_id == seller_user.id).one()
         )
     category = make_category(db_session)
     product = make_product(db_session, seller, category, stock_quantity=stock_quantity)

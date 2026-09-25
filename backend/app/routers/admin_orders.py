@@ -30,10 +30,7 @@ def list_all_orders(
 
     total = query.count()
     rows = (
-        query.order_by(Order.placed_at.desc())
-        .offset((page - 1) * page_size)
-        .limit(page_size)
-        .all()
+        query.order_by(Order.placed_at.desc()).offset((page - 1) * page_size).limit(page_size).all()
     )
     items = [
         OrderListItemOut(

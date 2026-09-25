@@ -79,7 +79,9 @@ def test_suspend_deactivates_all_seller_products_and_logs_it(
     product_a = make_product(db_session, seller, category, name="A")
     product_b = make_product(db_session, seller, category, name="B")
 
-    signup_verify_login(client, db_session, monkeypatch, "suspend-admin1@example.com", is_admin=True)
+    signup_verify_login(
+        client, db_session, monkeypatch, "suspend-admin1@example.com", is_admin=True
+    )
     response = client.post(
         f"/admin/sellers/{seller.id}/suspend", json={"reason": "policy violation"}
     )
@@ -108,7 +110,9 @@ def test_reinstate_restores_approved_status_without_reactivating_products(
     category = make_category(db_session)
     product = make_product(db_session, seller, category)
 
-    signup_verify_login(client, db_session, monkeypatch, "suspend-admin2@example.com", is_admin=True)
+    signup_verify_login(
+        client, db_session, monkeypatch, "suspend-admin2@example.com", is_admin=True
+    )
     client.post(f"/admin/sellers/{seller.id}/suspend", json={"reason": "test"})
 
     response = client.post(f"/admin/sellers/{seller.id}/reinstate")

@@ -1,7 +1,6 @@
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session as DBSession
 
-from app.models.product import Product
 from app.models.product_moderation_log import ProductModerationLog
 from tests.helpers import login, place_order, signup_verify_login
 
@@ -63,9 +62,7 @@ def test_moderate_removed_hides_product_but_keeps_past_orders(
     assert order_response.status_code == 200
 
 
-def test_suspend_then_reinstate_logs_both(
-    client: TestClient, db_session: DBSession, monkeypatch
-):
+def test_suspend_then_reinstate_logs_both(client: TestClient, db_session: DBSession, monkeypatch):
     result = place_order(
         client,
         db_session,

@@ -30,9 +30,7 @@ def test_admin_can_create_and_update_category(
     assert update_response.json()["slug"] == "toys"
 
 
-def test_create_with_unknown_parent_is_400(
-    client: TestClient, db_session: DBSession, monkeypatch
-):
+def test_create_with_unknown_parent_is_400(client: TestClient, db_session: DBSession, monkeypatch):
     signup_verify_login(client, db_session, monkeypatch, "cat-admin2@example.com", is_admin=True)
 
     response = client.post(
@@ -42,9 +40,7 @@ def test_create_with_unknown_parent_is_400(
     assert response.status_code == 400
 
 
-def test_delete_blocked_by_direct_product(
-    client: TestClient, db_session: DBSession, monkeypatch
-):
+def test_delete_blocked_by_direct_product(client: TestClient, db_session: DBSession, monkeypatch):
     category = make_category(db_session, "Direct Cat", "direct-cat")
     seller = make_approved_seller(client, db_session, monkeypatch, "cat-seller1@example.com")
     make_product(db_session, seller, category)
@@ -74,9 +70,7 @@ def test_delete_blocked_by_descendant_product(
     assert response.status_code == 409
 
 
-def test_delete_succeeds_when_unreferenced(
-    client: TestClient, db_session: DBSession, monkeypatch
-):
+def test_delete_succeeds_when_unreferenced(client: TestClient, db_session: DBSession, monkeypatch):
     category = make_category(db_session, "Empty Cat", "empty-cat")
     signup_verify_login(client, db_session, monkeypatch, "cat-admin5@example.com", is_admin=True)
 

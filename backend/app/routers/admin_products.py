@@ -34,9 +34,7 @@ def list_products_for_moderation(
         query = query.filter(Product.moderation_status == moderation_status)
 
     total = query.count()
-    rows = (
-        query.order_by(Product.id).offset((page - 1) * page_size).limit(page_size).all()
-    )
+    rows = query.order_by(Product.id).offset((page - 1) * page_size).limit(page_size).all()
     items = [
         AdminProductOut(
             id=product.id,
