@@ -5,11 +5,13 @@ import {
   createProduct,
   getCategories,
   getMyProducts,
+  getMyStats,
   updateProduct,
   uploadProductImage,
   ApiError,
   type Category,
   type SellerProduct,
+  type SellerStats,
 } from '../api/client'
 
 function flattenCategories(categories: Category[], depth = 0): { id: number; label: string }[] {
@@ -127,12 +129,16 @@ function SellerDashboardPage() {
   const [categoryId, setCategoryId] = useState<number | ''>('')
   const [stockQuantity, setStockQuantity] = useState('0')
   const [error, setError] = useState<string | null>(null)
+  const [stats, setStats] = useState<SellerStats | null>(null)
 
   useEffect(() => {
     getCategories().then(setCategories)
     getMyProducts()
       .then((page) => setProducts(page.items))
       .catch(() => setProducts([]))
+    getMyStats()
+      .then(setStats)
+      .catch(() => setStats(null))
   }, [])
 
   const flatCategories = flattenCategories(categories)
@@ -168,6 +174,26 @@ function SellerDashboardPage() {
       <p>
         <Link to="/sell/orders">View orders to fulfill</Link>
       </p>
+
+      <h2>Your stats</h2>
+      {stats === null && <p>Loading stats...</p>}
+      {stats !== null && (
+        <div>
+          <p>Total orders: {stats.total_orders}</p>
+          <p>Total revenue: {stats.total_revenue} lei</p>
+          {stats.top_products.length === 0 ? (
+            <p>No sales yet.</p>
+          ) : (
+            <ul>
+              {stats.top_products.map((product) => (
+                <li key={product.product_id}>
+                  {product.product_name} — {product.quantity_sold} sold
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
 
       <h2>Add a product</h2>
       <form onSubmit={handleCreate}>

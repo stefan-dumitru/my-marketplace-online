@@ -14,6 +14,18 @@ class CategoryOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class CategoryCreateRequest(BaseModel):
+    name: str
+    slug: str
+    parent_id: int | None = None
+
+
+class CategoryUpdateRequest(BaseModel):
+    name: str | None = None
+    slug: str | None = None
+    parent_id: int | None = None
+
+
 class ProductListItemOut(BaseModel):
     id: int
     name: str

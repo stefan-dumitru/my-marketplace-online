@@ -35,3 +35,22 @@ def get_visible_product(db: DBSession, product_id: int) -> Product | None:
         .first()
     )
     return row
+
+
+def category_and_descendant_ids(db: DBSession, category_id: int) -> set[int]:
+    """category_id plus every category nested under it, however deep."""
+    rows = db.query(Category.id, Category.parent_id).all()
+    children_by_parent: dict[int, list[int]] = {}
+    for cid, pid in rows:
+        if pid is not None:
+            children_by_parent.setdefault(pid, []).append(cid)
+
+    result: set[int] = set()
+    stack = [category_id]
+    while stack:
+        current = stack.pop()
+        if current in result:
+            continue
+        result.add(current)
+        stack.extend(children_by_parent.get(current, []))
+    return result

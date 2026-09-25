@@ -119,17 +119,26 @@ def place_order(
     stock_quantity: int = 5,
     quantity: int = 1,
     new_buyer: bool = True,
+    new_seller: bool = True,
 ) -> dict:
     """Creates a seller + product, places one order as a buyer.
 
     Leaves `client` logged in as the buyer — use `login()` to switch to the seller/admin
     afterward. Mocks the order-placed email so this never hits Resend for real. Pass
-    `new_buyer=False` to place a second order as a buyer who already exists and is verified
-    (e.g. from an earlier `place_order` call) — this just logs them back in instead of
-    re-signing-up, which would 409 on an already-used email.
+    `new_buyer=False` (or `new_seller=False`) to reuse a buyer/seller that already exists from an
+    earlier `place_order` call — signing them up again would 409 on the already-used email. A
+    reused seller still gets a fresh product created under them.
     """
     monkeypatch.setattr("app.routers.checkout.send_order_placed_email", lambda *a, **k: None)
-    seller = make_approved_seller(client, db_session, monkeypatch, seller_email)
+    if new_seller:
+        seller = make_approved_seller(client, db_session, monkeypatch, seller_email)
+    else:
+        seller_user = db_session.query(User).filter(User.email == seller_email).one()
+        seller = (
+            db_session.query(SellerProfile)
+            .filter(SellerProfile.user_id == seller_user.id)
+            .one()
+        )
     category = make_category(db_session)
     product = make_product(db_session, seller, category, stock_quantity=stock_quantity)
 

@@ -29,22 +29,32 @@ describe('AdminSellersPage', () => {
     })
   })
 
-  it('lists pending applications and approves one', async () => {
+  it('approves a pending application', async () => {
     vi.spyOn(client, 'getCurrentUser').mockResolvedValue({
       id: 1,
       email: 'admin@example.com',
       full_name: 'Admin',
       is_admin: true,
     })
-    vi.spyOn(client, 'getPendingSellers').mockResolvedValue([
-      {
-        id: 5,
-        business_name: 'Pending Shop',
-        status: 'pending',
-        submitted_at: new Date().toISOString(),
-        decided_at: null,
-      },
-    ])
+    vi.spyOn(client, 'getAllSellers')
+      .mockResolvedValueOnce([
+        {
+          id: 5,
+          business_name: 'Pending Shop',
+          status: 'pending',
+          submitted_at: new Date().toISOString(),
+          decided_at: null,
+        },
+      ])
+      .mockResolvedValueOnce([
+        {
+          id: 5,
+          business_name: 'Pending Shop',
+          status: 'approved',
+          submitted_at: new Date().toISOString(),
+          decided_at: new Date().toISOString(),
+        },
+      ])
     const approve = vi.spyOn(client, 'approveSeller').mockResolvedValue({
       id: 5,
       business_name: 'Pending Shop',
@@ -60,12 +70,38 @@ describe('AdminSellersPage', () => {
       </MemoryRouter>,
     )
 
-    expect(await screen.findByText('Pending Shop')).toBeInTheDocument()
+    expect(await screen.findByText(/Pending Shop — pending/)).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: /approve/i }))
 
     expect(approve).toHaveBeenCalledWith(5)
     await waitFor(() => {
-      expect(screen.getByText(/no pending applications/i)).toBeInTheDocument()
+      expect(screen.getByText(/Pending Shop — approved/)).toBeInTheDocument()
     })
+  })
+
+  it('shows a suspend button for an approved seller', async () => {
+    vi.spyOn(client, 'getCurrentUser').mockResolvedValue({
+      id: 1,
+      email: 'admin@example.com',
+      full_name: 'Admin',
+      is_admin: true,
+    })
+    vi.spyOn(client, 'getAllSellers').mockResolvedValue([
+      {
+        id: 6,
+        business_name: 'Active Shop',
+        status: 'approved',
+        submitted_at: new Date().toISOString(),
+        decided_at: new Date().toISOString(),
+      },
+    ])
+
+    render(
+      <MemoryRouter>
+        <AdminSellersPage />
+      </MemoryRouter>,
+    )
+
+    expect(await screen.findByRole('button', { name: /suspend/i })).toBeInTheDocument()
   })
 })

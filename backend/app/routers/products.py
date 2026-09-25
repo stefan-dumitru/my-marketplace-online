@@ -5,33 +5,14 @@ from sqlalchemy import func, or_
 from sqlalchemy.orm import Session as DBSession
 
 from app.db import get_db
-from app.models.category import Category
 from app.models.product import Product
 from app.models.product_image import ProductImage
 from app.models.review import Review
 from app.schemas.catalog import Page, ProductDetailOut, ProductImageOut, ProductListItemOut
-from app.services.catalog import visible_products_query
+from app.services.catalog import category_and_descendant_ids, visible_products_query
 from app.services.storage import image_url
 
 router = APIRouter(tags=["catalog"])
-
-
-def _category_and_descendant_ids(db: DBSession, category_id: int) -> set[int]:
-    rows = db.query(Category.id, Category.parent_id).all()
-    children_by_parent: dict[int, list[int]] = {}
-    for cid, pid in rows:
-        if pid is not None:
-            children_by_parent.setdefault(pid, []).append(cid)
-
-    result: set[int] = set()
-    stack = [category_id]
-    while stack:
-        current = stack.pop()
-        if current in result:
-            continue
-        result.add(current)
-        stack.extend(children_by_parent.get(current, []))
-    return result
 
 
 @router.get("/products", response_model=Page[ProductListItemOut])
@@ -51,7 +32,7 @@ def list_products(
         like = f"%{q}%"
         query = query.filter(or_(Product.name.ilike(like), Product.description.ilike(like)))
     if category_id is not None:
-        query = query.filter(Product.category_id.in_(_category_and_descendant_ids(db, category_id)))
+        query = query.filter(Product.category_id.in_(category_and_descendant_ids(db, category_id)))
     if seller_id is not None:
         query = query.filter(Product.seller_id == seller_id)
     if min_price is not None:

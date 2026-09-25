@@ -1,18 +1,27 @@
 import { useEffect, useState } from 'react'
 import {
   approveSeller,
+  getAllSellers,
   getCurrentUser,
-  getPendingSellers,
+  reinstateSeller,
   rejectSeller,
+  suspendSeller,
   type SellerApplication,
 } from '../api/client'
+import AdminNav from './AdminNav'
 
 type AccessStatus = 'checking' | 'allowed' | 'denied'
 
 function AdminSellersPage() {
   const [access, setAccess] = useState<AccessStatus>('checking')
-  const [applications, setApplications] = useState<SellerApplication[]>([])
+  const [sellers, setSellers] = useState<SellerApplication[]>([])
   const [error, setError] = useState<string | null>(null)
+
+  function reload() {
+    getAllSellers()
+      .then(setSellers)
+      .catch(() => setError('Could not load sellers'))
+  }
 
   useEffect(() => {
     getCurrentUser()
@@ -21,10 +30,7 @@ function AdminSellersPage() {
   }, [])
 
   useEffect(() => {
-    if (access !== 'allowed') return
-    getPendingSellers()
-      .then(setApplications)
-      .catch(() => setError('Could not load applications'))
+    if (access === 'allowed') reload()
   }, [access])
 
   if (access === 'checking') return <p>Loading...</p>
@@ -32,30 +38,56 @@ function AdminSellersPage() {
 
   async function handleApprove(id: number) {
     await approveSeller(id)
-    setApplications((prev) => prev.filter((a) => a.id !== id))
+    reload()
   }
 
   async function handleReject(id: number) {
     const reason = window.prompt('Reason for rejection (optional):') ?? undefined
     await rejectSeller(id, reason)
-    setApplications((prev) => prev.filter((a) => a.id !== id))
+    reload()
+  }
+
+  async function handleSuspend(id: number) {
+    const reason = window.prompt('Reason for suspension (optional):') ?? undefined
+    await suspendSeller(id, reason)
+    reload()
+  }
+
+  async function handleReinstate(id: number) {
+    await reinstateSeller(id)
+    reload()
   }
 
   return (
     <main>
-      <h1>Pending seller applications</h1>
+      <h1>Sellers</h1>
+      <AdminNav />
       {error && <p role="alert">{error}</p>}
-      {applications.length === 0 && <p>No pending applications.</p>}
+      {sellers.length === 0 && <p>No sellers yet.</p>}
       <ul>
-        {applications.map((application) => (
-          <li key={application.id}>
-            {application.business_name}{' '}
-            <button type="button" onClick={() => handleApprove(application.id)}>
-              Approve
-            </button>{' '}
-            <button type="button" onClick={() => handleReject(application.id)}>
-              Reject
-            </button>
+        {sellers.map((seller) => (
+          <li key={seller.id}>
+            {seller.business_name} — {seller.status}{' '}
+            {seller.status === 'pending' && (
+              <>
+                <button type="button" onClick={() => handleApprove(seller.id)}>
+                  Approve
+                </button>{' '}
+                <button type="button" onClick={() => handleReject(seller.id)}>
+                  Reject
+                </button>
+              </>
+            )}
+            {seller.status === 'approved' && (
+              <button type="button" onClick={() => handleSuspend(seller.id)}>
+                Suspend
+              </button>
+            )}
+            {seller.status === 'suspended' && (
+              <button type="button" onClick={() => handleReinstate(seller.id)}>
+                Reinstate
+              </button>
+            )}
           </li>
         ))}
       </ul>

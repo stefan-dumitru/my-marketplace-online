@@ -1,6 +1,10 @@
 import { BrowserRouter, Route, Routes } from 'react-router'
 import AccountPage from './pages/AccountPage'
+import AdminCategoriesPage from './pages/AdminCategoriesPage'
+import AdminOrdersPage from './pages/AdminOrdersPage'
+import AdminProductsPage from './pages/AdminProductsPage'
 import AdminSellersPage from './pages/AdminSellersPage'
+import AdminStatsPage from './pages/AdminStatsPage'
 import CartPage from './pages/CartPage'
 import CatalogPage from './pages/CatalogPage'
 import CheckoutPage from './pages/CheckoutPage'
@@ -30,6 +34,10 @@ function App() {
         <Route path="/sell" element={<SellerDashboardPage />} />
         <Route path="/sell/orders" element={<SellerOrdersPage />} />
         <Route path="/admin/sellers" element={<AdminSellersPage />} />
+        <Route path="/admin/categories" element={<AdminCategoriesPage />} />
+        <Route path="/admin/products" element={<AdminProductsPage />} />
+        <Route path="/admin/orders" element={<AdminOrdersPage />} />
+        <Route path="/admin/stats" element={<AdminStatsPage />} />
         <Route path="/cart" element={<CartPage />} />
         <Route path="/checkout" element={<CheckoutPage />} />
         <Route path="/orders" element={<OrderHistoryPage />} />

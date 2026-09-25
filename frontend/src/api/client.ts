@@ -416,3 +416,101 @@ export function updateReview(productId: number, rating: number, comment: string)
 export function deleteReview(productId: number): Promise<void> {
   return request(`/products/${productId}/reviews/me`, { method: 'DELETE' })
 }
+
+export function createCategory(name: string, slug: string, parentId?: number): Promise<Category> {
+  return request('/admin/categories', {
+    method: 'POST',
+    body: JSON.stringify({ name, slug, parent_id: parentId ?? null }),
+  })
+}
+
+export function updateCategory(
+  id: number,
+  updates: { name?: string; slug?: string; parent_id?: number | null },
+): Promise<Category> {
+  return request(`/admin/categories/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(updates),
+  })
+}
+
+export function deleteCategory(id: number): Promise<void> {
+  return request(`/admin/categories/${id}`, { method: 'DELETE' })
+}
+
+export interface AdminProduct {
+  id: number
+  name: string
+  seller_id: number
+  seller_business_name: string
+  category_id: number
+  is_active: boolean
+  moderation_status: 'active' | 'removed_by_admin' | 'suspended_by_admin'
+}
+
+export function getAdminProducts(moderationStatus?: string): Promise<Page<AdminProduct>> {
+  const params = new URLSearchParams()
+  if (moderationStatus) params.set('moderation_status', moderationStatus)
+  return request(`/admin/products?${params.toString()}`)
+}
+
+export function moderateProduct(
+  productId: number,
+  action: 'removed' | 'suspended' | 'reinstated',
+  reason?: string,
+): Promise<AdminProduct> {
+  return request(`/admin/products/${productId}/moderate`, {
+    method: 'POST',
+    body: JSON.stringify({ action, reason: reason ?? null }),
+  })
+}
+
+export function suspendSeller(sellerId: number, reason?: string): Promise<SellerApplication> {
+  return request(`/admin/sellers/${sellerId}/suspend`, {
+    method: 'POST',
+    body: JSON.stringify({ reason: reason ?? null }),
+  })
+}
+
+export function reinstateSeller(sellerId: number): Promise<SellerApplication> {
+  return request(`/admin/sellers/${sellerId}/reinstate`, { method: 'POST' })
+}
+
+export function getAllSellers(): Promise<SellerApplication[]> {
+  return request('/admin/sellers')
+}
+
+export interface TopProduct {
+  product_id: number
+  product_name: string
+  quantity_sold: number
+}
+
+export interface SellerStats {
+  total_orders: number
+  total_revenue: string
+  top_products: TopProduct[]
+}
+
+export function getMyStats(): Promise<SellerStats> {
+  return request('/sellers/me/stats')
+}
+
+export interface AdminStats {
+  total_sellers: number
+  sellers_by_status: Record<string, number>
+  total_products: number
+  total_orders: number
+  total_revenue: string
+  orders_by_status: Record<string, number>
+}
+
+export function getAdminStats(): Promise<AdminStats> {
+  return request('/admin/stats')
+}
+
+export function getAdminOrders(statusFilter?: string): Promise<Page<OrderListItem>> {
+  const params = new URLSearchParams()
+  if (statusFilter) params.set('status_filter', statusFilter)
+  return request(`/admin/orders?${params.toString()}`)
+}

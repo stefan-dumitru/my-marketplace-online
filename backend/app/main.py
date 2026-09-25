@@ -6,6 +6,7 @@ from app.logging_config import configure_logging
 from app.routers import (
     addresses,
     admin_orders,
+    admin_products,
     admin_sellers,
     auth,
     cart,
@@ -18,6 +19,7 @@ from app.routers import (
     seller_orders,
     seller_products,
     sellers,
+    stats,
 )
 
 configure_logging()
@@ -46,3 +48,5 @@ app.include_router(orders.router)
 app.include_router(seller_orders.router)
 app.include_router(admin_orders.router)
 app.include_router(reviews.router)
+app.include_router(admin_products.router)
+app.include_router(stats.router)

@@ -52,3 +52,38 @@ def test_admin_transition_of_nonexistent_order_404s(
     response = client.patch("/admin/orders/999999/status", json={"status": "shipped"})
 
     assert response.status_code == 404
+
+
+def test_admin_can_list_all_orders_across_sellers(
+    client: TestClient, db_session: DBSession, monkeypatch
+):
+    result_a = place_order(
+        client,
+        db_session,
+        monkeypatch,
+        buyer_email="ao-buyer3@example.com",
+        seller_email="ao-seller3@example.com",
+    )
+    result_b = place_order(
+        client,
+        db_session,
+        monkeypatch,
+        buyer_email="ao-buyer4@example.com",
+        seller_email="ao-seller4@example.com",
+    )
+    signup_verify_login(client, db_session, monkeypatch, "ao-admin3@example.com", is_admin=True)
+
+    response = client.get("/admin/orders")
+
+    assert response.status_code == 200
+    ids = [item["id"] for item in response.json()["items"]]
+    assert result_a["order_id"] in ids
+    assert result_b["order_id"] in ids
+
+
+def test_non_admin_cannot_list_all_orders(client: TestClient, db_session: DBSession, monkeypatch):
+    signup_verify_login(client, db_session, monkeypatch, "ao-notadmin@example.com")
+
+    response = client.get("/admin/orders")
+
+    assert response.status_code == 403

@@ -16,6 +16,11 @@ describe('SellerDashboardPage', () => {
 
   it('lists existing products', async () => {
     vi.spyOn(client, 'getCategories').mockResolvedValue(CATEGORIES)
+    vi.spyOn(client, 'getMyStats').mockResolvedValue({
+      total_orders: 0,
+      total_revenue: '0.00',
+      top_products: [],
+    })
     vi.spyOn(client, 'getMyProducts').mockResolvedValue({
       items: [
         {
@@ -47,6 +52,11 @@ describe('SellerDashboardPage', () => {
 
   it('creates a new product from the form', async () => {
     vi.spyOn(client, 'getCategories').mockResolvedValue(CATEGORIES)
+    vi.spyOn(client, 'getMyStats').mockResolvedValue({
+      total_orders: 0,
+      total_revenue: '0.00',
+      top_products: [],
+    })
     vi.spyOn(client, 'getMyProducts').mockResolvedValue({
       items: [],
       total: 0,

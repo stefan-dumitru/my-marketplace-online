@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session as DBSession
 
 from app.db import get_db
 from app.deps import require_admin
+from app.models.product import Product
 from app.models.seller_action_log import SellerAction, SellerActionLog
 from app.models.seller_profile import SellerProfile, SellerStatus
 from app.models.user import User
@@ -56,6 +57,57 @@ def approve_seller(
     if applicant is not None:
         send_seller_decision_email(applicant.email, seller)
 
+    return seller
+
+
+@router.post("/{seller_id}/suspend", response_model=SellerApplicationOut)
+def suspend_seller(
+    seller_id: int,
+    payload: SellerRejectRequest,
+    admin: User = Depends(require_admin),
+    db: DBSession = Depends(get_db),
+) -> SellerProfile:
+    seller = _get_seller_or_404(db, seller_id)
+    now = datetime.now(UTC)
+    seller.status = SellerStatus.suspended
+    seller.decided_at = now
+    seller.decided_by = admin.id
+
+    db.query(Product).filter(Product.seller_id == seller.id).update(
+        {Product.is_active: False}, synchronize_session=False
+    )
+
+    db.add(
+        SellerActionLog(
+            seller_profile_id=seller.id,
+            admin_id=admin.id,
+            action=SellerAction.suspended,
+            reason=payload.reason,
+        )
+    )
+    db.commit()
+    db.refresh(seller)
+    return seller
+
+
+@router.post("/{seller_id}/reinstate", response_model=SellerApplicationOut)
+def reinstate_seller(
+    seller_id: int,
+    admin: User = Depends(require_admin),
+    db: DBSession = Depends(get_db),
+) -> SellerProfile:
+    seller = _get_seller_or_404(db, seller_id)
+    now = datetime.now(UTC)
+    seller.status = SellerStatus.approved
+    seller.decided_at = now
+    seller.decided_by = admin.id
+    db.add(
+        SellerActionLog(
+            seller_profile_id=seller.id, admin_id=admin.id, action=SellerAction.reinstated
+        )
+    )
+    db.commit()
+    db.refresh(seller)
     return seller
 
 
