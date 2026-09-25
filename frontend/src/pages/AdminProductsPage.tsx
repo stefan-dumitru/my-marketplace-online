@@ -1,7 +1,14 @@
 import { useEffect, useState } from 'react'
 import { getAdminProducts, getCurrentUser, moderateProduct, type AdminProduct } from '../api/client'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { Label } from '@/components/ui/label'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 
 type AccessStatus = 'checking' | 'allowed' | 'denied'
+
+const selectClassName =
+  'border-input flex h-9 w-52 rounded-md border bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]'
 
 const ACTIONS_BY_STATUS: Record<
   AdminProduct['moderation_status'],
@@ -38,8 +45,13 @@ function AdminProductsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [access, filter])
 
-  if (access === 'checking') return <p>Loading...</p>
-  if (access === 'denied') return <p role="alert">You don't have permission to view this page.</p>
+  if (access === 'checking') return <p className="text-muted-foreground">Loading...</p>
+  if (access === 'denied')
+    return (
+      <Alert variant="destructive">
+        <AlertDescription>You don't have permission to view this page.</AlertDescription>
+      </Alert>
+    )
 
   async function handleModerate(productId: number, action: 'removed' | 'suspended' | 'reinstated') {
     const reason =
@@ -51,36 +63,61 @@ function AdminProductsPage() {
   }
 
   return (
-    <main>
-      <h1>Products</h1>
+    <main className="mx-auto flex w-full max-w-2xl flex-col gap-6">
+      <h1 className="text-3xl font-semibold tracking-tight">Products</h1>
 
-      <label htmlFor="statusFilter">Filter by status</label>
-      <select id="statusFilter" value={filter} onChange={(e) => setFilter(e.target.value)}>
-        <option value="">All</option>
-        <option value="active">Active</option>
-        <option value="removed_by_admin">Removed</option>
-        <option value="suspended_by_admin">Suspended</option>
-      </select>
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="statusFilter">Filter by status</Label>
+        <select
+          id="statusFilter"
+          className={selectClassName}
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+        >
+          <option value="">All</option>
+          <option value="active">Active</option>
+          <option value="removed_by_admin">Removed</option>
+          <option value="suspended_by_admin">Suspended</option>
+        </select>
+      </div>
 
-      {error && <p role="alert">{error}</p>}
-      {products === null && <p>Loading products...</p>}
-      {products !== null && products.length === 0 && <p>No products match this filter.</p>}
-      <ul>
-        {(products ?? []).map((product) => (
-          <li key={product.id}>
-            {product.name} ({product.seller_business_name}) — {product.moderation_status}{' '}
-            {ACTIONS_BY_STATUS[product.moderation_status].map((opt) => (
-              <button
-                key={opt.action}
-                type="button"
-                onClick={() => handleModerate(product.id, opt.action)}
-              >
-                {opt.label}
-              </button>
-            ))}
-          </li>
-        ))}
-      </ul>
+      {error && (
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+      {products === null && <p className="text-muted-foreground">Loading products...</p>}
+      {products !== null && products.length === 0 && (
+        <p className="text-muted-foreground">No products match this filter.</p>
+      )}
+      {products !== null && products.length > 0 && (
+        <ul className="flex flex-col gap-3">
+          {products.map((product) => (
+            <li key={product.id}>
+              <Card>
+                <CardContent className="flex flex-wrap items-center justify-between gap-3">
+                  <span>
+                    {product.name} ({product.seller_business_name}) — {product.moderation_status}
+                  </span>
+                  <span className="flex gap-2">
+                    {ACTIONS_BY_STATUS[product.moderation_status].map((opt) => (
+                      <Button
+                        key={opt.action}
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleModerate(product.id, opt.action)}
+                      >
+                        {opt.label}
+                      </Button>
+                    ))}
+                  </span>
+                </CardContent>
+              </Card>
+            </li>
+          ))}
+        </ul>
+      )}
     </main>
   )
 }

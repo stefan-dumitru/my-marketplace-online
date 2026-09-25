@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react'
 import { getMyOrders, updateOrderStatus, type OrderListItem } from '../api/client'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 
 const NEXT_STATUSES: Record<
   OrderListItem['status'],
@@ -39,29 +42,46 @@ function SellerOrdersPage() {
     }
   }
 
-  if (error) return <p role="alert">{error}</p>
-  if (orders === null) return <p>Loading...</p>
+  if (error)
+    return (
+      <Alert variant="destructive">
+        <AlertDescription>{error}</AlertDescription>
+      </Alert>
+    )
+  if (orders === null) return <p className="text-muted-foreground">Loading...</p>
 
   return (
-    <main>
-      <h1>Your orders to fulfill</h1>
-      {orders.length === 0 && <p>No orders yet.</p>}
-      <ul>
-        {orders.map((order) => (
-          <li key={order.id}>
-            Order #{order.id} — {order.total_amount} lei · {order.status}{' '}
-            {NEXT_STATUSES[order.status].map((next) => (
-              <button
-                key={next.status}
-                type="button"
-                onClick={() => handleTransition(order.id, next.status)}
-              >
-                {next.label}
-              </button>
-            ))}
-          </li>
-        ))}
-      </ul>
+    <main className="mx-auto flex w-full max-w-2xl flex-col gap-6">
+      <h1 className="text-3xl font-semibold tracking-tight">Your orders to fulfill</h1>
+      {orders.length === 0 && <p className="text-muted-foreground">No orders yet.</p>}
+      {orders.length > 0 && (
+        <ul className="flex flex-col gap-3">
+          {orders.map((order) => (
+            <li key={order.id}>
+              <Card>
+                <CardContent className="flex flex-wrap items-center justify-between gap-3">
+                  <span>
+                    Order #{order.id} — {order.total_amount} lei · {order.status}
+                  </span>
+                  <span className="flex gap-2">
+                    {NEXT_STATUSES[order.status].map((next) => (
+                      <Button
+                        key={next.status}
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleTransition(order.id, next.status)}
+                      >
+                        {next.label}
+                      </Button>
+                    ))}
+                  </span>
+                </CardContent>
+              </Card>
+            </li>
+          ))}
+        </ul>
+      )}
     </main>
   )
 }

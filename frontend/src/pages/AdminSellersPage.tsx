@@ -8,6 +8,9 @@ import {
   suspendSeller,
   type SellerApplication,
 } from '../api/client'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 
 type AccessStatus = 'checking' | 'allowed' | 'denied'
 
@@ -32,8 +35,13 @@ function AdminSellersPage() {
     if (access === 'allowed') reload()
   }, [access])
 
-  if (access === 'checking') return <p>Loading...</p>
-  if (access === 'denied') return <p role="alert">You don't have permission to view this page.</p>
+  if (access === 'checking') return <p className="text-muted-foreground">Loading...</p>
+  if (access === 'denied')
+    return (
+      <Alert variant="destructive">
+        <AlertDescription>You don't have permission to view this page.</AlertDescription>
+      </Alert>
+    )
 
   async function handleApprove(id: number) {
     await approveSeller(id)
@@ -58,37 +66,71 @@ function AdminSellersPage() {
   }
 
   return (
-    <main>
-      <h1>Sellers</h1>
-      {error && <p role="alert">{error}</p>}
-      {sellers.length === 0 && <p>No sellers yet.</p>}
-      <ul>
-        {sellers.map((seller) => (
-          <li key={seller.id}>
-            {seller.business_name} — {seller.status}{' '}
-            {seller.status === 'pending' && (
-              <>
-                <button type="button" onClick={() => handleApprove(seller.id)}>
-                  Approve
-                </button>{' '}
-                <button type="button" onClick={() => handleReject(seller.id)}>
-                  Reject
-                </button>
-              </>
-            )}
-            {seller.status === 'approved' && (
-              <button type="button" onClick={() => handleSuspend(seller.id)}>
-                Suspend
-              </button>
-            )}
-            {seller.status === 'suspended' && (
-              <button type="button" onClick={() => handleReinstate(seller.id)}>
-                Reinstate
-              </button>
-            )}
-          </li>
-        ))}
-      </ul>
+    <main className="mx-auto flex w-full max-w-2xl flex-col gap-6">
+      <h1 className="text-3xl font-semibold tracking-tight">Sellers</h1>
+      {error && (
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+      {sellers.length === 0 && <p className="text-muted-foreground">No sellers yet.</p>}
+      {sellers.length > 0 && (
+        <ul className="flex flex-col gap-3">
+          {sellers.map((seller) => (
+            <li key={seller.id}>
+              <Card>
+                <CardContent className="flex flex-wrap items-center justify-between gap-3">
+                  <span>
+                    {seller.business_name} — {seller.status}
+                  </span>
+                  <span className="flex gap-2">
+                    {seller.status === 'pending' && (
+                      <>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleApprove(seller.id)}
+                        >
+                          Approve
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleReject(seller.id)}
+                        >
+                          Reject
+                        </Button>
+                      </>
+                    )}
+                    {seller.status === 'approved' && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleSuspend(seller.id)}
+                      >
+                        Suspend
+                      </Button>
+                    )}
+                    {seller.status === 'suspended' && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleReinstate(seller.id)}
+                      >
+                        Reinstate
+                      </Button>
+                    )}
+                  </span>
+                </CardContent>
+              </Card>
+            </li>
+          ))}
+        </ul>
+      )}
     </main>
   )
 }
