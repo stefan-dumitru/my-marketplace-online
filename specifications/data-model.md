@@ -55,7 +55,9 @@
 - **Lifecycle:** created/edited/deleted freely by its owner.
 - **Delete/cascade semantics:** deletable even if past orders were shipped to it, because
   `Order` stores its own **snapshot** of the address at checkout time (see `Order` below) — the
-  live `Address` row is never referenced by a historical order.
+  live `Address` row is never referenced by a historical order. All of a user's `Address` rows are
+  also hard-deleted as part of account deletion (see Data Retention) — unlike `User`, they're not
+  anonymized, since they have no historical dependency to preserve.
 - **Constraints / invariants:** at most one `is_default = true` per user (app-enforced).
 
 ### Category — Master
@@ -252,7 +254,10 @@ Explicitly out of scope, not an oversight.
 - **None for v1** — nothing is purged or expired; explicit decision, not an oversight (portfolio
   project, keep everything indefinitely).
 - The one exception is account deletion, which is handled as **anonymization, not erasure**: on
-  delete, `User.email`/`full_name` are scrubbed and `anonymized_at` is set, but the row (and any
-  `Order`/`Review` history involving them) stays — a seller still sees that an order happened,
-  reviews stay attached to the product, but the personal data behind them is gone. See
+  delete, `User.email`/`full_name` are scrubbed, `is_active` is set to `false`, and `anonymized_at`
+  is set, but the row (and any `Order`/`Review` history involving them) stays — a seller still sees
+  that an order happened, reviews stay attached to the product (`Review.buyer_name` is a live join
+  to `User.full_name`, so it naturally shows the scrubbed name), but the personal data behind them
+  is gone. The user's `Address` rows are hard-deleted at the same time (see `Address` above) — they
+  have no historical dependency, unlike `Order`/`Review`. See
   `security.md` > Data Sensitivity.

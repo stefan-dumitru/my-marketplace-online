@@ -281,6 +281,7 @@ export interface AddressInput {
   region: string
   postal_code: string
   country: string
+  is_default?: boolean
 }
 
 export interface Address extends AddressInput {
@@ -297,6 +298,24 @@ export function createAddress(input: AddressInput): Promise<Address> {
   return request('/addresses', {
     method: 'POST',
     body: JSON.stringify(input),
+  })
+}
+
+export function updateAddress(id: number, updates: Partial<AddressInput>): Promise<Address> {
+  return request(`/addresses/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(updates),
+  })
+}
+
+export function deleteAddress(id: number): Promise<void> {
+  return request(`/addresses/${id}`, { method: 'DELETE' })
+}
+
+export function deleteAccount(password: string): Promise<{ message: string }> {
+  return request('/auth/delete-account', {
+    method: 'POST',
+    body: JSON.stringify({ password }),
   })
 }
 

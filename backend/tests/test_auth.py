@@ -1,9 +1,11 @@
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session as DBSession
 
+from app.models.address import Address
 from app.models.email_verification import EmailVerificationToken
 from app.models.login_attempt import LoginAttempt
 from app.models.user import User
+from tests.helpers import DEFAULT_PASSWORD, login, place_order, signup_verify_login
 
 SIGNUP_PAYLOAD = {
     "email": "buyer@example.com",
@@ -146,3 +148,72 @@ def test_logout_invalidates_session(client: TestClient, db_session: DBSession, m
 
     me_response = client.get("/auth/me")
     assert me_response.status_code == 401
+
+
+def test_delete_account_scrubs_pii_and_ends_the_session(
+    client: TestClient, db_session: DBSession, monkeypatch
+):
+    user = signup_verify_login(client, db_session, monkeypatch, "delete-me@example.com")
+    client.post(
+        "/addresses",
+        json={
+            "label": "Home",
+            "recipient_name": "Test Buyer",
+            "street": "1 Main St",
+            "city": "Bucharest",
+            "region": "Bucharest",
+            "postal_code": "010101",
+            "country": "Romania",
+        },
+    )
+
+    response = client.post("/auth/delete-account", json={"password": DEFAULT_PASSWORD})
+
+    assert response.status_code == 200, response.text
+    db_session.expire_all()
+    refreshed = db_session.query(User).filter(User.id == user.id).one()
+    assert refreshed.email == f"deleted-user-{user.id}@deleted.invalid"
+    assert refreshed.full_name == "Deleted user"
+    assert refreshed.is_active is False
+    assert refreshed.anonymized_at is not None
+    assert db_session.query(Address).filter(Address.user_id == user.id).count() == 0
+
+    me_response = client.get("/auth/me")
+    assert me_response.status_code == 401
+
+
+def test_delete_account_rejects_wrong_password(
+    client: TestClient, db_session: DBSession, monkeypatch
+):
+    user = signup_verify_login(client, db_session, monkeypatch, "keep-me@example.com")
+
+    response = client.post("/auth/delete-account", json={"password": "wrong password"})
+
+    assert response.status_code == 401
+    db_session.expire_all()
+    refreshed = db_session.query(User).filter(User.id == user.id).one()
+    assert refreshed.email == "keep-me@example.com"
+    assert refreshed.anonymized_at is None
+
+
+def test_deleted_buyers_past_order_still_visible_to_seller(
+    client: TestClient, db_session: DBSession, monkeypatch
+):
+    seller_email = "delete-order-seller@example.com"
+    result = place_order(
+        client,
+        db_session,
+        monkeypatch,
+        buyer_email="delete-buyer@example.com",
+        seller_email=seller_email,
+    )
+
+    delete_response = client.post("/auth/delete-account", json={"password": DEFAULT_PASSWORD})
+    assert delete_response.status_code == 200, delete_response.text
+
+    login(client, seller_email)
+    orders_response = client.get("/sellers/me/orders")
+
+    assert orders_response.status_code == 200
+    order_ids = [order["id"] for order in orders_response.json()["items"]]
+    assert result["order_id"] in order_ids

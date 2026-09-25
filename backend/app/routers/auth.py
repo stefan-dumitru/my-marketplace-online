@@ -8,11 +8,18 @@ from sqlalchemy.orm import Session as DBSession
 from app.config import settings
 from app.db import get_db
 from app.deps import SESSION_COOKIE_NAME, get_current_user
+from app.models.address import Address
 from app.models.email_verification import EmailVerificationToken
 from app.models.login_attempt import LoginAttempt
 from app.models.session import Session
 from app.models.user import User
-from app.schemas.auth import LoginRequest, SignupRequest, UserPublic, VerifyEmailRequest
+from app.schemas.auth import (
+    DeleteAccountRequest,
+    LoginRequest,
+    SignupRequest,
+    UserPublic,
+    VerifyEmailRequest,
+)
 from app.security import generate_token, hash_password, verify_password
 from app.services.email import send_verification_email
 
@@ -171,3 +178,29 @@ def logout(
 @router.get("/me", response_model=UserPublic)
 def me(current_user: User = Depends(get_current_user)) -> User:
     return current_user
+
+
+@router.post("/delete-account")
+def delete_account(
+    payload: DeleteAccountRequest,
+    response: Response,
+    current_user: User = Depends(get_current_user),
+    session_token: str | None = Cookie(default=None, alias=SESSION_COOKIE_NAME),
+    db: DBSession = Depends(get_db),
+) -> dict[str, str]:
+    if not verify_password(payload.password, current_user.password_hash):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect password")
+
+    db.query(Address).filter(Address.user_id == current_user.id).delete()
+
+    current_user.email = f"deleted-user-{current_user.id}@deleted.invalid"
+    current_user.full_name = "Deleted user"
+    current_user.is_active = False
+    current_user.anonymized_at = datetime.now(UTC)
+
+    if session_token is not None:
+        db.query(Session).filter(Session.token == session_token).delete()
+
+    db.commit()
+    response.delete_cookie(SESSION_COOKIE_NAME)
+    return {"message": "Account deleted"}

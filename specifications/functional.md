@@ -175,3 +175,19 @@ underlying action, e.g. an order still succeeds even if its confirmation email d
 - **Rules & edge cases:**
   - Any pending/unfulfilled orders that already contain this listing are unaffected — moderation
     only blocks *new* purchases, existing orders still get fulfilled.
+
+### Delete Account
+
+- **Role(s):** Any authenticated user (buyer, seller, admin)
+- **Trigger:** User requests account deletion from their account page.
+- **Main flow:** User re-enters their current password to confirm. On success, the account is
+  anonymized (not erased): `email`/`full_name` are scrubbed, the account is deactivated, and the
+  user is logged out. All of the user's saved shipping addresses are deleted.
+- **Rules & edge cases:**
+  - Wrong password → 401, nothing is changed.
+  - Past orders and reviews are retained (with the scrubbed identity behind them) so sellers and
+    product pages still reflect real history — see `data-model.md` > Data Retention.
+  - A `SellerProfile`, if any, is left as-is; its `business_name` is independent of the personal
+    account being deleted, so an anonymized user's storefront (and its past orders) still stands.
+  - The original email becomes available for a new signup once scrubbed (`data-model.md`'s
+    email-uniqueness invariant already allows this).

@@ -11,6 +11,18 @@ class AddressCreateRequest(BaseModel):
     region: str
     postal_code: str
     country: str
+    is_default: bool = False
+
+
+class AddressUpdateRequest(BaseModel):
+    label: str | None = None
+    recipient_name: str | None = None
+    street: str | None = None
+    city: str | None = None
+    region: str | None = None
+    postal_code: str | None = None
+    country: str | None = None
+    is_default: bool | None = None
 
 
 class AddressOut(BaseModel):

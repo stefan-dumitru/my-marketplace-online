@@ -16,6 +16,10 @@ class VerifyEmailRequest(BaseModel):
     token: str
 
 
+class DeleteAccountRequest(BaseModel):
+    password: str
+
+
 class UserPublic(BaseModel):
     id: int
     email: str
