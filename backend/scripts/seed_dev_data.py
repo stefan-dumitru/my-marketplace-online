@@ -1,7 +1,8 @@
-"""Seed local dev data for browsing the Phase 2 catalog.
+"""Seed local dev data: an admin account, a demo approved seller, categories, and products.
 
-There's no write-path through the API yet to create sellers/products (that's Phase 3), so this
-inserts directly via the ORM. Run with: python -m scripts.seed_dev_data
+There's no public sign-up path for admins by design (see functional.md > Authentication), so this
+is also how the only admin account gets created locally. Run with:
+python -m scripts.seed_dev_data
 Safe to re-run — every insert is get-or-create keyed on its natural unique field.
 """
 
@@ -18,7 +19,7 @@ from app.models.user import User
 from app.security import hash_password
 
 
-def get_or_create_user(db: Session, email: str, full_name: str) -> User:
+def get_or_create_user(db: Session, email: str, full_name: str, *, is_admin: bool = False) -> User:
     user = db.query(User).filter(User.email == email).first()
     if user is not None:
         return user
@@ -27,6 +28,7 @@ def get_or_create_user(db: Session, email: str, full_name: str) -> User:
         password_hash=hash_password("password123"),
         full_name=full_name,
         email_verified=True,
+        is_admin=is_admin,
         created_at=datetime.now(UTC),
     )
     db.add(user)
@@ -89,6 +91,8 @@ def get_or_create_product(
 def main() -> None:
     db = SessionLocal()
     try:
+        get_or_create_user(db, "admin@example.com", "Demo Admin", is_admin=True)
+
         user = get_or_create_user(db, "seller@example.com", "Demo Seller")
         seller = get_or_create_seller(db, user, "Demo Electronics & Books")
 

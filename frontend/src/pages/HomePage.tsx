@@ -1,6 +1,34 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router'
-import { getHealth, getCurrentUser, logout, type HealthStatus, type User } from '../api/client'
+import {
+  getHealth,
+  getCurrentUser,
+  getMyApplication,
+  logout,
+  type HealthStatus,
+  type SellerStatus,
+  type User,
+} from '../api/client'
+
+function SellerLink({ isAdmin }: { isAdmin: boolean }) {
+  const [status, setStatus] = useState<SellerStatus | 'none' | null>(null)
+
+  useEffect(() => {
+    if (isAdmin) return
+    getMyApplication()
+      .then((app) => setStatus(app.status))
+      .catch(() => setStatus('none'))
+  }, [isAdmin])
+
+  if (isAdmin) {
+    return <Link to="/admin/sellers">Seller applications</Link>
+  }
+  if (status === 'approved') {
+    return <Link to="/sell">Seller dashboard</Link>
+  }
+  if (status === null) return null
+  return <Link to="/sell/apply">Become a seller</Link>
+}
 
 function AuthStatus() {
   const [user, setUser] = useState<User | null>(null)
@@ -18,7 +46,7 @@ function AuthStatus() {
   if (user) {
     return (
       <p>
-        Logged in as {user.email} ·{' '}
+        Logged in as {user.email} · <SellerLink isAdmin={user.is_admin} /> ·{' '}
         <button type="button" onClick={() => logout().then(() => setUser(null))}>
           Log out
         </button>

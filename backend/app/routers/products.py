@@ -12,6 +12,7 @@ from app.models.product import ModerationStatus, Product
 from app.models.product_image import ProductImage
 from app.models.seller_profile import SellerProfile, SellerStatus
 from app.schemas.catalog import Page, ProductDetailOut, ProductImageOut, ProductListItemOut
+from app.services.storage import image_url
 
 router = APIRouter(tags=["catalog"])
 
@@ -120,6 +121,14 @@ def get_product(product_id: int, db: DBSession = Depends(get_db)) -> ProductDeta
         seller_id=product.seller_id,
         seller_business_name=business_name,
         description=product.description,
-        images=[ProductImageOut.model_validate(image) for image in images],
+        images=[
+            ProductImageOut(
+                id=image.id,
+                storage_key=image.storage_key,
+                display_order=image.display_order,
+                url=image_url(image.storage_key),
+            )
+            for image in images
+        ],
         created_at=product.created_at,
     )

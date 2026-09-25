@@ -31,8 +31,7 @@ class ProductImageOut(BaseModel):
     id: int
     storage_key: str
     display_order: int
-
-    model_config = {"from_attributes": True}
+    url: str
 
 
 class ProductDetailOut(ProductListItemOut):

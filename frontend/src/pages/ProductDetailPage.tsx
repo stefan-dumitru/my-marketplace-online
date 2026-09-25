@@ -46,11 +46,11 @@ function ProductDetailPage() {
       <p>Category: {product.category_name}</p>
       <p>Sold by: {product.seller_business_name}</p>
       {product.images.length > 0 && (
-        <ul>
+        <div>
           {product.images.map((image) => (
-            <li key={image.id}>{image.storage_key}</li>
+            <img key={image.id} src={image.url} alt={product.name} width={200} />
           ))}
-        </ul>
+        </div>
       )}
     </main>
   )

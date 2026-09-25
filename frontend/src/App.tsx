@@ -1,9 +1,12 @@
 import { BrowserRouter, Route, Routes } from 'react-router'
 import AccountPage from './pages/AccountPage'
+import AdminSellersPage from './pages/AdminSellersPage'
 import CatalogPage from './pages/CatalogPage'
 import HomePage from './pages/HomePage'
 import LoginPage from './pages/LoginPage'
 import ProductDetailPage from './pages/ProductDetailPage'
+import SellerApplyPage from './pages/SellerApplyPage'
+import SellerDashboardPage from './pages/SellerDashboardPage'
 import SignupPage from './pages/SignupPage'
 import VerifyEmailPage from './pages/VerifyEmailPage'
 
@@ -18,6 +21,9 @@ function App() {
         <Route path="/verify-email" element={<VerifyEmailPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/account" element={<AccountPage />} />
+        <Route path="/sell/apply" element={<SellerApplyPage />} />
+        <Route path="/sell" element={<SellerDashboardPage />} />
+        <Route path="/admin/sellers" element={<AdminSellersPage />} />
       </Routes>
     </BrowserRouter>
   )

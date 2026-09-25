@@ -22,5 +22,14 @@ class Settings(BaseSettings):
 
     frontend_base_url: str = "http://localhost:5173"
 
+    r2_account_id: str = ""
+    r2_access_key_id: str = ""
+    r2_secret_access_key: str = ""
+    r2_bucket_name: str = ""
+    r2_public_base_url: str = ""
+
+    max_image_size_bytes: int = 5 * 1024 * 1024
+    allowed_image_content_types: set[str] = {"image/jpeg", "image/png", "image/webp"}
+
 
 settings = Settings()

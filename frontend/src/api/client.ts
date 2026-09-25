@@ -10,9 +10,10 @@ export class ApiError extends Error {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const isFormData = init?.body instanceof FormData
   const response = await fetch(`${API_BASE_URL}${path}`, {
     credentials: 'include',
-    headers: { 'Content-Type': 'application/json' },
+    headers: isFormData ? {} : { 'Content-Type': 'application/json' },
     ...init,
   })
 
@@ -94,9 +95,16 @@ export interface ProductListItem {
   seller_business_name: string
 }
 
+export interface ProductImage {
+  id: number
+  storage_key: string
+  display_order: number
+  url: string
+}
+
 export interface ProductDetail extends ProductListItem {
   description: string
-  images: { id: number; storage_key: string; display_order: number }[]
+  images: ProductImage[]
   created_at: string
 }
 
@@ -136,4 +144,91 @@ export function getProducts(filters: ProductFilters = {}): Promise<Page<ProductL
 
 export function getProduct(id: number): Promise<ProductDetail> {
   return request(`/products/${id}`)
+}
+
+export type SellerStatus = 'pending' | 'approved' | 'rejected' | 'suspended'
+
+export interface SellerApplication {
+  id: number
+  business_name: string
+  status: SellerStatus
+  submitted_at: string
+  decided_at: string | null
+}
+
+export function applySeller(businessName: string): Promise<SellerApplication> {
+  return request('/sellers/apply', {
+    method: 'POST',
+    body: JSON.stringify({ business_name: businessName }),
+  })
+}
+
+export function getMyApplication(): Promise<SellerApplication> {
+  return request('/sellers/me/application')
+}
+
+export function getPendingSellers(): Promise<SellerApplication[]> {
+  return request('/admin/sellers?status_filter=pending')
+}
+
+export function approveSeller(sellerId: number): Promise<SellerApplication> {
+  return request(`/admin/sellers/${sellerId}/approve`, { method: 'POST' })
+}
+
+export function rejectSeller(sellerId: number, reason?: string): Promise<SellerApplication> {
+  return request(`/admin/sellers/${sellerId}/reject`, {
+    method: 'POST',
+    body: JSON.stringify({ reason: reason ?? null }),
+  })
+}
+
+export interface SellerProduct {
+  id: number
+  name: string
+  description: string
+  price: string
+  stock_quantity: number
+  category_id: number
+  is_active: boolean
+  moderation_status: string
+  created_at: string
+  updated_at: string
+}
+
+export function getMyProducts(): Promise<Page<SellerProduct>> {
+  return request('/sellers/me/products')
+}
+
+export interface ProductInput {
+  name: string
+  description: string
+  price: string
+  category_id: number
+  stock_quantity: number
+}
+
+export function createProduct(input: ProductInput): Promise<SellerProduct> {
+  return request('/sellers/me/products', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
+}
+
+export function updateProduct(
+  id: number,
+  updates: Partial<ProductInput & { is_active: boolean }>,
+): Promise<SellerProduct> {
+  return request(`/sellers/me/products/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(updates),
+  })
+}
+
+export function uploadProductImage(productId: number, file: File): Promise<{ id: number }> {
+  const formData = new FormData()
+  formData.append('file', file)
+  return request(`/sellers/me/products/${productId}/images`, {
+    method: 'POST',
+    body: formData,
+  })
 }

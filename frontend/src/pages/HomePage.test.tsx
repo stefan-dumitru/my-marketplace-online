@@ -62,6 +62,9 @@ describe('HomePage', () => {
       full_name: 'Test Buyer',
       is_admin: false,
     })
+    vi.spyOn(client, 'getMyApplication').mockRejectedValue(
+      new client.ApiError(404, 'No application found'),
+    )
 
     render(
       <MemoryRouter>
@@ -70,5 +73,24 @@ describe('HomePage', () => {
     )
 
     expect(await screen.findByText(/Logged in as buyer@example.com/)).toBeInTheDocument()
+    expect(await screen.findByText('Become a seller')).toBeInTheDocument()
+  })
+
+  it('shows a seller applications link for admins', async () => {
+    vi.spyOn(client, 'getHealth').mockResolvedValue({ status: 'ok', db: 'ok' })
+    vi.spyOn(client, 'getCurrentUser').mockResolvedValue({
+      id: 1,
+      email: 'admin@example.com',
+      full_name: 'Admin',
+      is_admin: true,
+    })
+
+    render(
+      <MemoryRouter>
+        <HomePage />
+      </MemoryRouter>,
+    )
+
+    expect(await screen.findByText('Seller applications')).toBeInTheDocument()
   })
 })
